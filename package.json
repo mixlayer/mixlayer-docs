@@ -1,0 +1,31 @@
+{
+  "name": "mixlayer-docs",
+  "version": "0.0.1",
+  "description": "Mixlayer Documentation",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mixlayer/mixlayer-docs.git"
+  },
+  "author": "Zack Angelo <zack@mixlayer.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mixlayer/mixlayer-docs/issues"
+  },
+  "homepage": "https://github.com/mixlayer/mixlayer-docs/issues",
+  "dependencies": {
+    "next": "^13.0.6",
+    "nextra": "latest",
+    "nextra-theme-docs": "^2.2.14",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "18.11.10",
+    "typescript": "^4.9.3"
+  }
+}

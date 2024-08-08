@@ -1,0 +1,6 @@
+{
+  "prefill": "Prefill",
+  "constrained-generation": "Constrained Generation",
+  "hidden-tokens": "Hidden Tokens",
+  "tool-calling": "Tool Calling"
+}
