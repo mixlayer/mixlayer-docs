@@ -19,7 +19,7 @@ const config: DocsThemeConfig = {
     key: "beta-access-1",
     text: "⚠️ Mixlayer is currently in open beta. Please excuse us if you encounter any issues while we get things ready.",
   },
-  docsRepositoryBase: "https://github.com/mixlayer/mixlayer-docs",
+  docsRepositoryBase: "https://github.com/mixlayer/mixlayer-docs/blob/main",
   footer: {
     text: "",
   },
