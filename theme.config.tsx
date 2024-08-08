@@ -15,6 +15,10 @@ const config: DocsThemeConfig = {
   chat: {
     link: "https://discord.com",
   },
+  banner: {
+    key: "beta-access-1",
+    text: "⚠️ Mixlayer is currently in open beta. Please excuse us if you encounter any issues while we get things ready.",
+  },
   docsRepositoryBase: "https://github.com/mixlayer/mixlayer-docs",
   footer: {
     text: "",

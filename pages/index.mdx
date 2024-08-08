@@ -1,19 +1,21 @@
 # Introduction
  
-Welcome to Mixlayer! 
+Welcome to Mixlayer! 🎉
 
 ### What is this?
 
-Mixlayer is a platform that enables you to build, deploy, and manage customized versions of AI models. It is designed to be easy to use, and to allow you to focus on building your models, rather than managing infrastructure.
+Mixlayer is a platform that enables you to build and deploy customized versions of AI models using simple Javascript code. It is designed to be easy to use, and to allow you to focus on building your models, rather than writing a bunch of API boilerplate or managing infrastructure.
 
-Programmable model logic. 
-Gives you access to models that are more programmable, more flexible.
-No calling rest APIs.  No managing state. 
+Essentially, you use pieces of code instead of a string of text to prompt the models. The net result is that you can accomplish a lot more with drastically less code. 
 
 ### Why is it useful?
 
-Stateful fluid control, deployment.
+Building in this way means that models are more programmable and easier to use. Many complex use-cases such as multi-step prompting, tool use and structured output fall out naturally as a result of this design. 
+
+Most AI inference APIs have amnesia. When you send them requests, you have to remind them of everything you've told them before. Mixlayer is stateful: while your code is executing you have total control over the model's context. You don't have to send new requests for every message in a conversation between your code and the model, or every step of a multi-step process.
+
+And when you're ready to open up your model to the rest of the world, we provide a way to easily deploy your model as an API, so that you can share it with others or have it power features in other products.
 
 ### How does it work? 
 
-We compile your scripts to WASM and run them inside of our custom AI infrastructure. 
+Mixlayer's built on top of a custom implementation of open source large language models. When you deploy an app on our platform, we compile it to WebAssembly and run it along side the model. 
