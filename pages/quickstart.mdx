@@ -1,6 +1,7 @@
 import { Callout, Steps } from 'nextra/components'
+import Image from 'next/image'
 
-# Quick Start
+# Quickstart
 
 This guide will help you get started with Mixlayer by guiding a model to provide simple horoscopes and then deploying it to an API. 
 
@@ -10,10 +11,126 @@ This guide will help you get started with Mixlayer by guiding a model to provide
 If you haven't already, create and sign-in to a Mixlayer account. You can sign up at [console.mixlayer.com/sign-up](https://console.mixlayer.com/sign-up). 
 
 <Callout type="info" emoji="ℹ️">
-  We require a credit card number to sign up for an account. However, we provide a starter model free of charge. You will not be charged unless you use the paid  models in the playground or in an app. 
+  We require a credit card number to sign up for an account, even on our Free account. However, we provide a starter model free of charge. On our Free plan you will not be charged for usage unless you make requests to the paid models in the playground or in an app. 
 </Callout>
  
 ### Open the Playground
- 
-Contents for step 2.
+
+{/* better markdowny way to render 2 columns?  */}
+<div className="flex space-x-3 mt-5"> 
+    <div className="flex-1">
+    Once you're signed in, navigate to the Playground by clicking on the "Playground" tab in the sidebar.
+
+    This will allow you to start writing and executing code against a model. 
+    </div>
+    <div className="flex-1">    
+        <Image src="/console_playg.jpg" className='w-96' width="2064" height="1146" alt="Console Playground" />
+    </div>
+</div>  
+
+### Run your first program
+Mixlayer uses two simple functions to interact with the underlying model: `prompt` and `gen`. 
+
+* `prompt` appends the tokens you specify to the model's context window. 
+* `gen` instructs the model to produce a completion based on what is already in the context window. 
+
+```js filename="prompt.js" copy /prompt/ /gen/
+const sign = "capricorn"; 
+prompt(`I am a ${sign}, can you tell me a horoscope?\n`, {role: 'user'}); 
+gen({ len: 1000, role: 'assistant' });
+```
+
+Copy and paste the code above into the left editor pane of Playground and run it.
+
+```plain filename="output.txt"
+I am a capricorn, can you tell me a horoscope?
+
+You are a Capricorn. Here's your horoscope for today:
+
+"Capricorn (December 22 - January 19)
+
+Today, you may feel a sense of restlessness and discontent with your current situation. This could be due to feeling stuck in a rut or not seeing the progress you desire. However, this is also an opportunity for growth and change.
+
+Take some time to reflect on what's holding you back and make a plan to overcome these obstacles. Focus on building your skills and knowledge, and don't be afraid to take calculated risks.
+
+Remember that success rarely happens overnight, but with persistence and hard work, you can achieve your goals."
+```
+
+### Deploy
+
+#### Create an App 
+Let's make this simple prompt available to users and other apps on the internet. Start by going to the "Apps" tab in the Console and clicking "New App". Enter a name for your app select the `llama3.1-instruct-shared` model.
+
+#### Deploy your code
+Once the app is created, go to the app's "Deployments" tab and press "New Deployment". Paste the code in from above and click "Deploy". 
+
+### Make a Request 
+Mixlayer apps are protected by app tokens. To make a request we have to create a new token:
+
+1. Click "Auth Tokens" and then click "New Token". 
+2. Once the token is created copy it to your clipboard or save it somewhere you can refer to it later. 
+
+Go back to the "Settings" screen for the app. At the bottom there is a form that will help you with building a cURL request to access your app from the terminal. Click the `$MIXLAYER_APP_TOKEN` placeholder and paste in the token you just created. 
+
+Press the "Copy" button. Navigate to your terminal and paste the command in: 
+
+```bash filename="curl.sh" copy
+curl -XPOST -d "{}" \
+  -H 'Authorization: Bearer app_sk_********' \
+  https://app-bwdy9p-kpywgp.a.mixlayer.ai
+```
+
+```filename="output.txt"
+I am a capricorn, can you tell me a horoscope?
+
+As a Capricorn (December 22 - January 19), here's your horoscope:
+
+The current planetary positions suggest that you're in a period of growth and transformation. With Saturn, your ruling planet, in a harmonious aspect with the Sun, you're likely to feel motivated and driven to achieve your goals.
+```
+
+<Callout type="info" emoji="ℹ️">
+  The request may take a while to complete. By default, Mixlayer will buffer the entire model's output before returning it to you. If you require lower latency, 
+  you can instruct the API to stream the response back to you by setting the `stream` option to true. 
+</Callout>
+
+### Add Parameters
+
+What use is a horoscope API that only works for Capricorns? Let's add a parameter to let it be used for any sign. Mixlayer allows you to pass in a JSON object accessed via `request.params`: 
+
+```js filename="prompt.js" /request\.params/
+const sign = request.params.sign || "capricorn"; 
+prompt(`I am a ${sign}, can you tell me a horoscope?\n`, {role: 'user'}); 
+gen({ len: 1000, role: 'assistant' });
+```
+
+Paste this code into a new deployment the same way you did in [Deploy your Code](#deploy-your-code).
+
+Let's try a new request with the `sign` param (you can use the cURL helper on the app's tab to help you): 
+
+```bash filename="curl.sh" copy
+curl -XPOST -d "{ \"params\": {\"sign\":\"sagittarius\"} }" \
+  -H 'Content-Type: application/json'\
+  -H 'Authorization: Bearer app_sk_********' \
+  https://app-bwdy9p-kpywgp.a.mixlayer.ai
+```
+
+```plain filename="output.txt"
+I am a sagittarius, can you tell me a horoscope?
+
+As a Sagittarius (November 22 - December 21), here's your horoscope:
+
+**Current Astrological Influences:**
+
+The current planetary positions suggest that you're in a period of growth and exploration. Jupiter, your ruling planet, is in a harmonious trine with Uranus, indicating a sense of freedom and adventure. This aspect can bring new opportunities for travel, learning, and personal expansion.
+```
+
+### Going Further
+
+In just a few minutes, we've been able to build an AI API that can generate horoscopes for any sign. Try enhancing this API even further by: 
+
+* Specifying a `system` prompt at the beginning to customize the output and personality of the output to your liking
+* Adding more parameters to customize the horoscope further
+* Using hidden tokens to mask out any prompting that isn't directly relevant to the response 
+* Enabling streaming to reduce the latency of the output 
+
 </Steps>
