@@ -23,6 +23,11 @@ const config: DocsThemeConfig = {
   footer: {
     text: "Mixlayer Labs, Inc © 2024",
   },
+  useNextSeoProps() {
+    return {
+      titleTemplate: "%s | Mixlayer Documentation",
+    };
+  },
 };
 
 export default config;
