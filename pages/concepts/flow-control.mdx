@@ -1,0 +1,43 @@
+# Flow Control
+
+When using models, it's frequently necessary to change your prompt based on the output of the model. This can be done using conditional logic in your code.
+
+In this section, we will learn how to capture the output of a completion and use it guide the flow of the prompt. 
+
+## How it works
+
+When you call `gen`, you can capture the output of the model by assigning it to a variable. You can then use this variable to guide the flow of your code.
+
+## Examples
+
+In this example we prompt the model to answer an existential question. If the model's output includes the number 42, we prompt the model to provide a more serious answer. Otherwise, we ask it to provide an answer that references a novel commonly mentioned when discussing the meaning of life.
+
+```js filename="flow-control.js" copy
+prompt(`What is the meaning of life? Answer in a single sentence.\n`, { role: 'user' });
+const output = gen({len: 500, role: 'assistant'});
+
+if (output.includes('42')) { 
+    prompt(`\n\nCorrect! But can you tell me a more serious answer that doesn't reference Hitchiker's Guide to the Galaxy?\n\n`, { role: 'user' });
+} else { 
+    prompt(`\n\nIncorrect! I'm looking for an answer that references a novel commonly mentioned when discussing this topic.\n\n`, { role: 'user' });
+}
+
+gen({len: 500, role: 'assistant'});
+```
+
+This technique can also be used in a loop to get the model to iteratively refine its output.
+
+```js filename="brevity.js" copy
+prompt(`What is the meaning of life? Answer in a single sentence.\n`, { role: 'user' });
+
+const NUM_TRIES = 5; 
+let tries = 0;
+while (tries < NUM_TRIES) { 
+    gen({len: 500, role: 'assistant'});
+    tries++;
+
+    if (tries < NUM_TRIES) { 
+        prompt(`\nCan you be more brief in your answer?\n`, { role: 'user' });
+    }
+}
+```
