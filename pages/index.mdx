@@ -10,9 +10,9 @@ Essentially, you use pieces of code instead of a string of text to prompt the mo
 
 ### Why is it useful?
 
-Building in this way means that models are more programmable and easier to use. Many complex use-cases such as multi-step prompting, tool use and structured output fall out naturally as a result of this design. 
+Building in this way means that models are more programmable and easier to use. Many complex use-cases such as multi-step prompting, tool use and structured output fall out naturally as a result of this design. Mixlayer provides features such as constrained generation, tool use and output capture that make it seamless and easy for you and your code to cooperatively work with the underlying model to achieve a common goal. 
 
-Most AI inference APIs have amnesia. When you send them requests, you have to remind them of everything you've told them before. Mixlayer is stateful: while your code is executing you have total control over the model's context. You don't have to send new requests for every message in a conversation between your code and the model, or every step of a multi-step process.
+Most AI inference APIs have amnesia. When you send them requests, you have to remind them of everything you've told them before. Mixlayer is stateful: while your code is executing you have total control over the model's context window. You don't have to send new requests for every message in a conversation between your code and the model, or every step of a multi-step process.
 
 And when you're ready to open up your model to the rest of the world, we provide a way to easily deploy your model as an API, so that you can share it with others or have it power features in other products.
 
