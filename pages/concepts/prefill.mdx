@@ -1,0 +1,28 @@
+# Prefill
+
+"Prefilling" is a technique where you provide the model with some initial text to guide its completion. This can be useful if you want the answer to follow a specific format or structure or if you want to speak on behalf of the model to give it some hints about what you want it to say. 
+
+## Examples
+
+### Translated List
+
+For example, you can use `prompt` with the `assistant` role to prefill the model's answer with an exact list format that you want. This will also prevent the model from generating any "fluff" before the list.
+
+```js filename="prefill-list.js" copy
+const languages = ['English', 'Spanish', 'French'];
+prompt(`How do you say "hello" in ${languages.length} languages?\n`, { role: 'user' });
+
+for(let i=0;i<languages.length;i++) { 
+    //here we prompt the model to format the list with number, a period and
+    //a specific language we want it to translate to after
+    prompt(`${i+1}. ${languages[i]}:`, { role: 'assistant' });
+    gen({stop_at: '\n', role: 'assistant'});
+}
+```
+
+```plain filename="output.txt"
+How do you say "hello" in 3 languages?
+1. English: Hello
+2. Spanish: Hola
+3. French: Bonjour
+```
