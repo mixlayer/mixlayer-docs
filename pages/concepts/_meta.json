@@ -1,4 +1,5 @@
 {
+  "flow-control": "Flow Control",
   "prefill": "Prefill",
   "constrained-generation": "Constrained Generation",
   "hidden-tokens": "Hidden Tokens",

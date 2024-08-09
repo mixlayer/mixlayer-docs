@@ -1,3 +1,58 @@
 # Constrained Generation 
 
-Mixlayer allows you to guide AI models into generating according to specific output patterns. 
+Sometimes you have a hard requirement on the output when you're interacting with a model. This is common the model must interact with other systems according to a predefined contract. The traditional way of accomplishing this is asking the model nicely and then hoping that it listens to you (e.g., "please answer just yes or no, nothing else"). 
+
+Mixlayer allows you to specify constraints on the output of the model so you can be sure it always generates what you expect. 
+
+## How it works 
+
+When you call `gen` with the `regex` option, we compile your regex to a representation we can use in when sampling output tensors from the model's forward pass. Because we will only select tokens that adhere to the pattern, you can be sure the output will match your regex every time.  
+
+## Examples
+
+### Pick a number
+
+In this example, we ask the model to pick a number between 1 and 9. We then use the `regex` option to ensure the model only generates a single digit number. Try changing the regex to see how the output changes.
+
+```js filename="pick-a-number.js" copy
+prompt(`Pick a number between 1 and 9:\n`, { role: 'user' });
+gen({ regex: '[1-9]', role: 'assistant' });
+```
+
+```plain filename="output.txt"
+Pick a number between 1 and 9:
+6
+```
+
+### Ad-hoc Classification
+
+In this example, we ask the model to classify sentences as either a question or a statement. We then use the `regex` option to ensure the model only generates the words "question" or "statement". 
+
+```js filename="classify.js" copy
+const samples = [ 
+    "What is the meaning of life?", 
+    "The car is fast.", 
+    "How are you doing today?", 
+    "Mixlayer is awesome."
+];
+
+for (const sample of samples) { 
+    prompt(`Is '${sample}' a question or a statement?\n`, { role: 'user' });
+    gen({ regex: 'question|statement', role: 'assistant' });
+    prompt('\n\n', {role: 'user'});
+}
+```
+
+```plain filename="output.txt"
+Is 'What is the meaning of life?' a question or a statement?
+question
+
+Is 'The car is fast.' a question or a statement?
+statement
+
+Is 'How are you doing today?' a question or a statement?
+question
+
+Is 'Mixlayer is awesome.' a question or a statement?
+statement
+```
