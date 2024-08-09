@@ -1,1 +1,30 @@
 # Product Classifier 
+
+In this example we demonstrate how we can use a model on Mixlayer to classify products according to a specific category taxonomy. We provide the model with a list of categories to select from and use constrained generation to limit what it can pick. To increase the reliability of the output a bit, we ask the model to provide some reasoning ahead of selecting its choice.
+
+```javascript filename="product-classifier.js" copy
+let categories = ["Shoes", "Shirts", "Pants", "Hats", "Socks"];
+
+let product = "Nike AF1s";
+// let product = "Levi's 501 Original Fit";
+// let product = "Starter Flat Bill Trucker ";
+
+prompt("You are an expert at categorizing apparel\n", {role:'system', hidden: true});
+prompt("Categories are " + categories.join(", ") + ".\n", { role: 'user' });
+
+prompt(`What can you tell about the product '${product}' by just its name?`, { role: 'user' });
+$({len: 1000, role: 'assistant'});
+
+prompt(`\n\nWhat category does '${product}' belong to? `,{ role: 'user' });
+let cat_re = categories.join("|");
+$({ regex: cat_re, role: 'assistant' });
+```
+
+```json filename="output.txt"
+Categories are Shoes, Shirts, Pants, Hats, Socks.
+What can you tell about the product 'Nike AF1s' by just its name?
+
+Based on the name 'Nike AF1s', I would categorize it as a type of Shoe. The 'AF1' likely refers to the Air Force 1 model, which is a popular line of sneakers from Nike.
+
+What category does 'Nike AF1s' belong to? Shoes
+```
