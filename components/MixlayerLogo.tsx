@@ -6,7 +6,7 @@ export default function MixlayerLogo(props: {
 }) {
   return (
     <svg
-      className={props.className}
+      className={`fill-black dark:fill-white ${props.className}`}
       viewBox="0 0 1000 177"
       fill="black"
       width={"132px"}
