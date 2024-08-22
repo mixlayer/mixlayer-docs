@@ -25,6 +25,7 @@ const config: DocsThemeConfig = {
   },
   useNextSeoProps() {
     return {
+      description: "Mixlayer: Custom AI using simple JS",
       titleTemplate: "%s | Mixlayer Documentation",
     };
   },
