@@ -1,5 +1,7 @@
 import React from "react";
 import MixlayerLogo from "./components/MixlayerLogo";
+import { Analytics } from "@vercel/analytics/react";
+
 //@ts-ignore
 import { DocsThemeConfig } from "nextra-theme-docs";
 
@@ -23,6 +25,11 @@ const config: DocsThemeConfig = {
   footer: {
     text: "Mixlayer Labs, Inc © 2024",
   },
+  head: (
+    <>
+      <Analytics />
+    </>
+  ),
   useNextSeoProps() {
     return {
       description: "Mixlayer: Custom AI using simple JS",
