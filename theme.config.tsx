@@ -25,13 +25,6 @@ const config: DocsThemeConfig = {
   footer: {
     text: "Mixlayer Labs, Inc © 2024",
   },
-  head() {
-    return (
-      <>
-        <Analytics />
-      </>
-    );
-  },
   useNextSeoProps() {
     return {
       description: "Mixlayer: Custom AI using simple JS",
