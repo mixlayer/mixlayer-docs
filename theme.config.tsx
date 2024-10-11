@@ -1,6 +1,5 @@
 import React from "react";
 import MixlayerLogo from "./components/MixlayerLogo";
-import { Analytics } from "@vercel/analytics/react";
 
 //@ts-ignore
 import { DocsThemeConfig } from "nextra-theme-docs";

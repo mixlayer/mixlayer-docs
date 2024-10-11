@@ -12,9 +12,6 @@ To complete this quickstart, you'll need to have a basic understanding of Javasc
  
 If you haven't already, create and sign-in to a Mixlayer account. You can sign up at [console.mixlayer.com/sign-up](https://console.mixlayer.com/sign-up). 
 
-<Callout type="info" emoji="ℹ️">
-  We require a credit card number to sign up for an account, even on our Free account. However, we provide a starter model free of charge. On our Free plan you will not be charged for usage unless you make requests to the paid models in the playground or in an app. 
-</Callout>
  
 ### Open the Playground
 
@@ -39,7 +36,7 @@ Mixlayer uses two simple functions to interact with the underlying model: `promp
 ```js filename="prompt.js" copy /prompt/ /gen/
 const sign = "capricorn"; 
 prompt(`I am a ${sign}, can you tell me a horoscope?\n`, {role: 'user'}); 
-gen({ len: 1000, role: 'assistant' });
+gen({ limit: 1000, role: 'assistant' });
 ```
 
 Copy and paste the code above into the left editor pane of Playground and run it.
@@ -102,7 +99,7 @@ What use is a horoscope API that only works for Capricorns? Let's add a paramete
 ```js filename="prompt.js" /request\.params/
 const sign = request.params.sign || "capricorn"; 
 prompt(`I am a ${sign}, can you tell me a horoscope?\n`, {role: 'user'}); 
-gen({ len: 1000, role: 'assistant' });
+gen({ limit: 1000, role: 'assistant' });
 ```
 
 Paste this code into a new deployment the same way you did in [Deploy your Code](#deploy-your-code).

@@ -21,7 +21,7 @@ You can use it to provide the model with instructions or questions before genera
 
 ```js filename="prompt.js" copy
 prompt(`What is the meaning of life?`, { role: 'user' }); 
-gen({len: 100, role: 'assistant'});
+gen({limit: 100, role: 'assistant'});
 ```
 
 Or provide a system prompt to provide the model with rules and instructions: 

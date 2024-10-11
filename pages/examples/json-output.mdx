@@ -15,10 +15,10 @@ prompt(`What character class should our character be?\n`, { hidden: true, role: 
 const clazz = gen({regex: classes.join('|'), hidden: true, stop_at: '\n', role: 'assistant'}); 
 
 prompt(`\nWrite a visual description of this character.\n`, { hidden: true, role: 'user' });
-const description = gen({len: 1000, hidden: true, stop_at: '\n', role: 'assistant'}); 
+const description = gen({limit: 1000, hidden: true, stop_at: '\n', role: 'assistant'}); 
 
 prompt(`\nWrite an origin story for this character.\n`, { hidden: true, role: 'user' });
-const origin_story = gen({len: 1000, hidden: true, stop_at: '\n', role: 'assistant'}); 
+const origin_story = gen({limit: 1000, hidden: true, stop_at: '\n', role: 'assistant'}); 
 
 prompt('\nWhat level is this character?\n', { hidden: true, role: 'user' }); 
 const level = parseInt(gen({regex: '[1-9][0-9]*', hidden: true, role: 'assistant'}));

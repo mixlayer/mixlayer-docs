@@ -4,18 +4,19 @@ In this example we demonstrate how we can use a model on Mixlayer to classify pr
 
 ```javascript filename="product-classifier.js" copy
 let categories = ["Shoes", "Shirts", "Pants", "Hats", "Socks"];
-
+ 
 let product = "Nike AF1s";
 // let product = "Levi's 501 Original Fit";
 // let product = "Starter Flat Bill Trucker ";
-
+ 
 prompt("You are an expert at categorizing apparel\n", {role:'system', hidden: true});
 prompt("Categories are " + categories.join(", ") + ".\n", { role: 'user' });
-
+ 
 prompt(`What can you tell about the product '${product}' by just its name?`, { role: 'user' });
-$({len: 1000, role: 'assistant'});
-
-prompt(`\n\nWhat category does '${product}' belong to? `,{ role: 'user' });
+$({limit: 1000, role: 'assistant'});
+ 
+prompt(`What category does '${product}' belong to? `,{ role: 'user' });
+prompt(`Please just say the category, nothing else.\n`, { hidden: true, role: 'user' });
 let cat_re = categories.join("|");
 $({ regex: cat_re, role: 'assistant' });
 ```
@@ -24,7 +25,8 @@ $({ regex: cat_re, role: 'assistant' });
 Categories are Shoes, Shirts, Pants, Hats, Socks.
 What can you tell about the product 'Nike AF1s' by just its name?
 
-Based on the name 'Nike AF1s', I would categorize it as a type of Shoe. The 'AF1' likely refers to the Air Force 1 model, which is a popular line of sneakers from Nike.
+Based on the name 'Nike AF1s', I can categorize it as 'Shoes'.
 
-What category does 'Nike AF1s' belong to? Shoes
+What category does 'Nike AF1s' belong to? 
+Shoes
 ```
