@@ -13,12 +13,12 @@ prompt("You are an expert at categorizing apparel\n", {role:'system', hidden: tr
 prompt("Categories are " + categories.join(", ") + ".\n", { role: 'user' });
  
 prompt(`What can you tell about the product '${product}' by just its name?`, { role: 'user' });
-$({limit: 1000, role: 'assistant'});
+gen({limit: 1000, role: 'assistant'});
  
 prompt(`What category does '${product}' belong to? `,{ role: 'user' });
 prompt(`Please just say the category, nothing else.\n`, { hidden: true, role: 'user' });
 let cat_re = categories.join("|");
-$({ regex: cat_re, role: 'assistant' });
+gen({ regex: cat_re, role: 'assistant' });
 ```
 
 ```json filename="output.txt"
