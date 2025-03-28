@@ -14,7 +14,7 @@ const config: DocsThemeConfig = {
     link: "https://github.com/mixlayer/mixlayer-docs",
   },
   chat: {
-    link: "https://discord.com",
+    link: "https://discord.gg/dWzh65e7tP",
   },
   banner: {
     key: "beta-access-1",
@@ -22,7 +22,7 @@ const config: DocsThemeConfig = {
   },
   docsRepositoryBase: "https://github.com/mixlayer/mixlayer-docs/blob/main",
   footer: {
-    text: "Mixlayer Labs, Inc © 2024",
+    text: "Mixlayer Labs, Inc © 2025",
   },
   useNextSeoProps() {
     return {
