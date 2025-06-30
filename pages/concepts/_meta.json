@@ -1,7 +1,0 @@
-{
-  "constrained-generation": "Constrained Generation",
-  "flow-control": "Flow Control",
-  "prefill": "Prefill",
-  "hidden-tokens": "Hidden Tokens",
-  "tool-calling": "Tool Calling"
-}
