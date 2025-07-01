@@ -3,11 +3,11 @@ import { Meta } from "nextra";
 const meta: Meta = {
   index: "Introduction",
   quickstart: "Quickstart",
-  pricing: "Pricing",
-
   sequences: {
     title: "Using Sequences",
   },
+
+  pricing: "Pricing",
 
   examples: {
     title: "Examples",

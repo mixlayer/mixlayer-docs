@@ -1,3 +1,5 @@
+import { Callout } from "nextra/components";
+
 # Sequences
 
 Sequences ("seqs" for short) are the primary way to interact with models on Mixlayer. They are created by using the `open` operation. 
@@ -52,7 +54,7 @@ console.log(response);
 
 ### Prefilling 
 
-If you'd like to guide a model's response, you can place can partially complete a model's response before asking it to generate: 
+If you'd like to guide a model's response, you can provide a partial completion before asking it to generate: 
 
 ```typescript file="prefill.ts" copy=true
 // append a prompt
@@ -142,7 +144,6 @@ await seq.append("What's the meaning of life?");
 const response = await seq.gen({ 
   topP: 0.9, // nucleus sampling
   seed: 42, // reproducibility
-  repeatPenalty: 1.2, // penalize the model for repeating text
   temperature: 0.7, // sample from the distribution with a temperature parameter
   topK: 10, // limit sampling to the top K highest probability tokens
   repeatPenalty: 1.2, // penalize the model for repeating text
