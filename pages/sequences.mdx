@@ -2,7 +2,7 @@ import { Callout } from "nextra/components";
 
 # Sequences
 
-Sequences ("seqs" for short) are the primary way to interact with models on Mixlayer. They are created by using the `open` operation. 
+Sequences (or "seqs" for short) are the primary way to interact with models on Mixlayer. Create a sequence using the `open` operation:
 
 ```typescript file=open.ts
 const seq = await socket.open("meta/llama3.1-8b-instruct-free");
@@ -10,9 +10,9 @@ const seq = await socket.open("meta/llama3.1-8b-instruct-free");
 // do things with seq...
 ```
 
-Once you've opened a seq, can you [append](#appending-tokens) and [generate](#generating-tokens) tokens inside of it using the `append` and `gen` operations. 
+Once you've opened a sequence, you can [append](#appending-tokens) and [generate](#generating-tokens) tokens using the `append` and `gen` operations.
 
-When you're done with a seq, be sure to close it using the `close` operation to stop being billed for compute resources. 
+When you're done with a sequence, be sure to close it using the `close` operation to stop being billed for compute resources.
 
 ```typescript file=close.ts
 await seq.close();
@@ -20,7 +20,7 @@ await seq.close();
 
 ## Roles
 
-Most models are instruction-tuned and therefore require you to specify a role when appending or generating text: 
+Most models are instruction-tuned and require you to specify a role when appending or generating text:
 
 ```typescript file=append-role.ts
 // append a system prompt
@@ -37,12 +37,12 @@ const response = await seq.gen({ role: "assistant" }).text();
 console.log(response);
 ```
 
-If you generate or append tokens under a role, any subsequent tokens will be generated under that role if you don't specify one. 
+Subsequent `append` or `gen` calls will reuse the last specified role. For example, after `seq.gen({ role: "assistant" })`, the next call to `seq.append("...")` will implicitly use the `assistant` role.
 
 
 ## Appending Tokens
 
-To prompt a model, use the `append` operation to place tokens in its context window: 
+Use the `append` operation to add text to the model's context window:
 
 ```typescript file=append.ts
 await seq.append("The meaning of life is ");
@@ -85,7 +85,7 @@ console.log(JSON.parse(jsonArray));
 
 ## Generating Tokens
 
-Use the `gen` operation to ask the model to generate tokens in its context window: 
+Use the `gen` operation to generate new tokens from the model:
 
 ```typescript file=gen.ts
 await seq.append("What are 3 fun things to do in San Francisco?");
@@ -151,7 +151,7 @@ const response = await seq.gen({
 console.log(response);
 ```
 
-If no sampling method is specified, the model will use greedy sampling by default (select the highest probability token). 
+If no sampling method is specified, the model will use greedy sampling by default (selecting the highest probability token). 
 
 ### Thinking
 
