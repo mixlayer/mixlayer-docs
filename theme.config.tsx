@@ -21,7 +21,7 @@ const config: DocsThemeConfig = {
   },
   docsRepositoryBase: "https://github.com/mixlayer/mixlayer-docs/blob/main",
   footer: {
-    text: "Mixlayer Labs Inc © 2025",
+    content: <span>Mixlayer Labs Inc © 2025</span>,
   },
   useNextSeoProps() {
     return {

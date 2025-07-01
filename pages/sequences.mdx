@@ -5,6 +5,13 @@ import { Callout } from "nextra/components";
 Sequences (or "seqs" for short) are the primary way to interact with models on Mixlayer. Create a sequence using the `open` operation:
 
 ```typescript file=open.ts
+import { ModelSocket } from "modelsocket";
+
+// open a socket
+const socket = new ModelSocket("wss://models.mixlayer.ai/ws",{
+  apiKey: process.env.MIXLAYER_API_KEY,
+});
+
 const seq = await socket.open("meta/llama3.1-8b-instruct-free");
 
 // do things with seq...

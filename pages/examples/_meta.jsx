@@ -1,9 +1,0 @@
-export default {
-  "chain-of-thought": "Chain of Thought",
-  "code-converter": "Code Converter",
-  "json-output": "JSON Output",
-  "next-js": "Next.js",
-  "product-classifier": "Product Classifier",
-  "tool-generation": "Tool Generation",
-  "unstructured-to-structured": "Unstructured to Structured"
-}

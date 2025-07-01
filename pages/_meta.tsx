@@ -6,15 +6,7 @@ const meta: Meta = {
   sequences: {
     title: "Using Sequences",
   },
-
   pricing: "Pricing",
-
-  examples: {
-    title: "Examples",
-    sidebar: {
-      defaultOpen: false,
-    },
-  },
 };
 
 export default meta;
