@@ -21,13 +21,7 @@ const config: DocsThemeConfig = {
   },
   docsRepositoryBase: "https://github.com/mixlayer/mixlayer-docs/blob/main",
   footer: {
-    content: <span>Mixlayer Labs Inc © 2025</span>,
-  },
-  useNextSeoProps() {
-    return {
-      description: "Mixlayer: Limitless AI inference",
-      titleTemplate: "%s | Mixlayer Documentation",
-    };
+    content: <span>Mixlayer Labs Inc &copy; 2025</span>,
   },
 };
 
