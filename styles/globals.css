@@ -2,8 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "Berkeley Mono";
+  src: url("/fonts/BerkeleyMono-Light.otf") format("otf"); /* Adjust path */
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Berkeley Mono";
+  src: url("/fonts/BerkeleyMono-Bold.otf") format("otf"); /* Adjust path */
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Berkeley Mono";
+  src: url("/fonts/BerkeleyMono-SemiBold.otf") format("otf"); /* Adjust path */
+  font-weight: 600;
+  font-style: normal;
+}
+
 :root {
   /* --font-mono: "Times New Roman", monospace; */
+  --font-mono: "Berkeley Mono", monospace;
 }
 
 h1,
@@ -12,7 +34,7 @@ h3,
 h4,
 h5,
 h6 {
-  @apply font-mono;
+  @apply font-mono !font-light;
 }
 
 body {

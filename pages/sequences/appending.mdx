@@ -1,0 +1,32 @@
+# Appending Tokens
+
+To prompt a model, you can use the `append` operation to place tokens in its context window: 
+
+```typescript file=append.ts
+await seq.append("The meaning of life is");
+
+const response = await seq.gen().text(); // generate a completion
+
+console.log(response);
+```
+
+## Roles
+
+For instruction-tuned models, you can also specify the role of the tokens you'd like to append: 
+
+```typescript file=append-role.ts
+// append a system prompt
+await seq.append("You are a buddhist monk that deeply ponders existential questions.", 
+    { role: "system" });
+
+// append a question as a user
+await seq.append("What's the meaning of life?", 
+    { role: "user" });
+
+// generate a response
+const response = await seq.gen({ role: "assistant" }).text(); 
+
+console.log(response);
+```
+
+## Prefilling 

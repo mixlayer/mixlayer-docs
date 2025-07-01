@@ -1,4 +1,4 @@
-{
+export default {
   "chain-of-thought": "Chain of Thought",
   "code-converter": "Code Converter",
   "json-output": "JSON Output",

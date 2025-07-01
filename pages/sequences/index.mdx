@@ -1,0 +1,15 @@
+# Opening a Sequence
+
+Sequences ("seqs" for short) are the primary way to interact with models on Mixlayer. They are created by using the `open` operation. 
+
+```typescript file=open.ts
+const seq = await socket.open("meta/llama3.1-8b-instruct-free");
+
+// do things with seq...
+```
+
+When you're done with a seq, be sure to close it using the `close` operation to stop being billed for compute resources. 
+
+```typescript file=close.ts
+await seq.close();
+```
