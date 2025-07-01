@@ -6,7 +6,7 @@ const meta: Meta = {
   pricing: "Pricing",
 
   sequences: {
-    title: "Sequences",
+    title: "Using Sequences",
   },
 
   examples: {
