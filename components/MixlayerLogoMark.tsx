@@ -1,9 +1,14 @@
-import React from "react";
-
-export default function MixlayerLogoMark({ className = "" }: any) {
+export default function MixlayerLogo({
+  className,
+  style,
+}: {
+  className?: string;
+  style?: React.CSSProperties;
+}) {
   return (
     <svg
       className={className}
+      style={style}
       viewBox="0 0 205 210"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
