@@ -1,0 +1,78 @@
+# OpenAI REST API 
+
+In addition to the ModelSocket SDK, Mixlayer also provides an OpenAI-compatible Chat Completion API for interacting with models. The API is available at `https://models.mixlayer.ai/v1/chat/completions`. The API has full support for streaming and tool calling. 
+
+To use the REST API, you need to provide an API key. You create an API key in the [Mixlayer console](https://console.mixlayer.com/app/api-keys).
+
+## Clients 
+
+You can use common client libraries for the OpenAI API, such as [OpenAI's Node Library](https://github.com/openai/openai-node) or the Vercel [AI SDK](https://vercel.com/docs/ai-sdk/openai).
+
+### OpenAI Node 
+
+```typescript file=openai-node-sdk.ts
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env["MIXLAYER_API_KEY"]!,
+  baseURL: "https://models.mixlayer.ai/v1",
+});
+
+async function getChatCompletionStream() {
+  const stream = await openai.chat.completions.create({
+    model: 'meta/llama3.1-8b-instruct-free',
+    messages: [
+      { role: "system", content: "You are a helpful assistant." },
+      { role: "user", content: "Tell me a fun fact about chihuahuas." },
+    ],
+    stream: true,
+  });
+
+  for await (const event of stream) {
+    process.stdout.write(event.choices[0].delta.content ?? "");
+  }
+}
+```
+
+### Vercel AI SDK 
+
+To use the Vercel AI SDK, you need to install the Mixlayer provider: 
+
+```bash file=install-provider.sh
+npm install ai @mixlayer/ai-sdk-provider
+```
+
+```typescript file=example-api.ts
+import { streamText } from "ai";
+import { mixlayer } from "@mixlayer/ai-sdk-provider";
+import type { NextRequest } from "next/server";
+
+export async function POST(req: NextRequest) {
+  try {
+    const { prompt, model } = await req.json();
+
+    if (!prompt) {
+      return new Response("Prompt is required", { status: 400 });
+    }
+
+    const result = streamText({
+      model: mixlayer(model || "meta/llama3.1-8b-instruct-free"),
+      prompt,
+      maxTokens: 1000,
+    });
+
+    // Since Mixlayer is OpenAI-compatible, this should work perfectly
+    return result.toDataStreamResponse();
+  } catch (error) {
+    console.error("Streaming error:", error);
+    // @ts-ignore
+    return new Response(`Failed to stream text: ${error.message}`, {
+      status: 500,
+    });
+  }
+}
+```
+
+#### Resources 
+
+* [Mixlayer + Next.js AI SDK Example](https://github.com/mixlayer/mixlayer-ai-sdk-test)

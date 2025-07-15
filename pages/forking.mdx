@@ -1,0 +1,46 @@
+import { Callout } from "nextra/components";
+
+# Forking 
+
+Mixlayer allows you to "fork" sequences, which means you can create independent child sequences from the context in a single parent sequence. 
+
+Building up context in a sequence can be expensive. Forking allows you to reuse that state and explore multiple different future paths from that common context. 
+
+## Basics 
+
+In this example, we'll populate a sequence with some instructions then create several forks of it. In each fork we'll give it further instructions and then concurrently generate responses from each child sequence.
+
+<Callout type="info">
+  It's important to close forks when you're done with them. The `withFork` method closes the child automatically when the closure exits.
+</Callout>
+
+```typescript file=fork.ts
+const seq = await socket.open("meta/llama3.1-8b-instruct-free");
+
+// populate parent sequence with a question
+await seq.append("What's the meaning of life?", { role: "user" });
+
+// in each child, ask the model to answer in a different language
+const [spanish, chinese, pirate] = await Promise.all([ 
+  seq.withFork((s) => { 
+    s.append("Please answer in Spanish.\n", { role: "user" });
+    return s.gen({ role: "assistant" }).text(); 
+  }),
+  seq.withFork((s) => { 
+    s.append("Please answer in Chinese.\n", { role: "user" });
+    return s.gen({ role: "assistant" }).text(); 
+  }),
+  seq.withFork((s) => { 
+    s.append("Please answer like a pirate.\n", { role: "user" });
+    return s.gen({ role: "assistant" }).text(); 
+  }),
+]);
+
+console.log("Spanish: ", spanish);
+console.log("Chinese: ", chinese);
+console.log("Pirate: ", pirate);
+```
+
+### Limits
+
+Limits on the number of concurrent forks you have vary based on your account's limits. If you exceed this limit, the platform will throw an error. 
