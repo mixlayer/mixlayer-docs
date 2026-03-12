@@ -7,93 +7,13 @@ description: Welcome to the Mixlayer Docs!
  
 Welcome! 👋
 
-Mixlayer is an AI inference platform that gives you **stateful**, **persistent** access to an LLM's underlying context window using a protocol called **ModelSocket**. Mixlayer works by allocating a GPU slice and giving you access to raw inference primitives on top of it, enabling advanced patterns that aren't possible with traditional APIs. 
+Mixlayer is an inference platform for open source AI models. 
 
-### Example
-
-```typescript 
-// allocate a "seq", or a slice of a gpu
-const seq = await socket.open("meta/llama3.1-8b-instruct-free"); 
-
-// append some tokens to the context window
-await seq.append("Explain quantum computing.\n", { role: "user" });
-
-// ask the model to generate tokens in the window
-const fullResponse = await seq.gen({ role: "assistant" }).text(); 
-
-// Most APIs make you make a new request here, but Mixlayer's 
-// window stays open after generation, so you can append another instruction
-await seq.append("Now explain it simply.\n", { role: "user" });
-const simpleResponse = await seq.gen({ role: "assistant" }).text(); 
-
-seq.close(); 
-
-console.log(fullResponse);
-console.log(simpleResponse);
-```
-
-## Feature Overview
-
-#### 🌳 Context Forking
-
-Spawn child sequences to explore multiple future paths simultaneously:
-
-```typescript
-// Explore multiple future paths at once, reusing the tokens 
-// in the parent sequence.
-const [spanish, chinese, pirate] = await Promise.all([ 
-  seq.withFork((s) => { 
-    s.append("Now explain in Spanish.\n", { role: "user" });
-    return s.gen({ role: "assistant" }).text(); 
-  }),
-  seq.withFork((s) => { 
-    s.append("Now explain in Chinese.\n", { role: "user" });
-    return s.gen({ role: "assistant" }).text(); 
-  }),
-  seq.withFork((s) => { 
-    s.append("Now explain like a pirate.\n", { role: "user" });
-    return s.gen({ role: "assistant" }).text(); 
-  }),
-]);
-```
-
-#### ⚡ Streaming
-
-```typescript
-// Generate a response from the model
-const stream = seq.gen({ role: "assistant" }).textStream();
-
-// Print the output as it generates
-for await (const chunk of stream) {
-  process.stdout.write(chunk);
-}
-```
-
-#### 🛠️ Advanced Tool Calling
-
-```typescript
-// allow the model to access the current weather 
-let seq = await socket.open("meta/llama3.1-8b-instruct-free", 
-  { tools: [WEATHER_TOOL] }); 
-await seq.append('user', `What's the weather in SF?\n`);
-
-// Model can call muliple tools without losing context
-const sfWeather = await seq.gen({ role: "assistant" }).text(); 
-
-await seq.append("Now what about Tokyo?\n");
-const tokyoWeather = await seq.gen({ role: "assistant" }).text(); 
-
-console.log(sfWeather);
-console.log(tokyoWeather);
-```
-
-#### 🔄 OpenAI Compatibility
-
-If you don't need stateful context windows, Mixlayer's REST API is OpenAI-compatible so you can use it as a drop-in replacement when you need it:
+Get started quickly by using Mixlayer's OpenAI-compatible REST API, which is a drop-in replacement in most existing applications: 
 
 ```bash
-curl https://api.mixlayer.ai/v1/chat/completions \
-  -H "Authorization: Bearer YOUR_API_KEY" \
+curl https://models.mixlayer.ai/v1/chat/completions \
+  -H "Authorization: Bearer $MIXLAYER_API_KEY" \
   -d '{"model": "meta/llama3.1-8b-instruct-free", "messages": [...]}'
 ```
 
@@ -101,7 +21,4 @@ curl https://api.mixlayer.ai/v1/chat/completions \
 
 1. **Sign up** at [console.mixlayer.ai](https://console.mixlayer.com/sign-up)
 2. [**Get your API key**](https://console.mixlayer.com/app/api-keys) from the Console
-3. Choose your approach
-   - **ModelSocket** for advanced stateful features
-   - **OpenAI-compatible** for easy migration
-4. **Start building** with our [quickstart guide](/quickstart)
+

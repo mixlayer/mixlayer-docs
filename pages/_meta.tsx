@@ -2,23 +2,9 @@ import { Meta } from "nextra";
 
 const meta: Meta = {
   index: "Introduction",
-  quickstart: "Quickstart",
-  "---": {
-    type: "separator",
-    title: <div className="text-zinc-50 uppercase -mb-2">SDK</div>,
-  },
-  sequences: {
-    title: "Basics",
-  },
-  "tool-calls": {
-    title: "Tools",
-  },
-  forking: {
-    title: "Forking",
-  },
 
-  "openai-rest-api": {
-    title: "OpenAI REST API",
+  "api-clients": {
+    title: "API Clients",
   },
   "-----": {
     type: "separator",
