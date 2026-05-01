@@ -1,0 +1,261 @@
+---
+title: Client Libraries
+description: Use Mixlayer from Python, TypeScript, Rust, or curl with any OpenAI-compatible client
+---
+
+import { Tabs, Callout } from 'nextra/components'
+
+# Client Libraries
+
+Mixlayer exposes an OpenAI-compatible API at `https://models.mixlayer.ai/v1`. Any client library that targets the OpenAI Chat Completions API will work — point it at the Mixlayer base URL and pass your Mixlayer API key.
+
+You can [create an API key](https://console.mixlayer.com/app/api-keys) from the Mixlayer console.
+
+## Installation
+
+<Tabs items={['curl', 'Python', 'TypeScript', 'Rust']}>
+<Tabs.Tab>
+No installation required — `curl` is preinstalled on most systems.
+</Tabs.Tab>
+<Tabs.Tab>
+```bash
+pip install openai
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```bash
+npm install openai
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```toml file=Cargo.toml
+[dependencies]
+async-openai = "0.27"
+tokio = { version = "1", features = ["full"] }
+```
+</Tabs.Tab>
+</Tabs>
+
+## Basic chat completion
+
+<Tabs items={['curl', 'Python', 'TypeScript', 'Rust']}>
+<Tabs.Tab>
+```bash file=chat.sh
+curl https://models.mixlayer.ai/v1/chat/completions \
+  -H "Authorization: Bearer $MIXLAYER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "qwen/qwen3.5-4b-free",
+    "messages": [
+      {"role": "system", "content": "You are a helpful assistant."},
+      {"role": "user", "content": "Tell me a fun fact about chihuahuas."}
+    ]
+  }'
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```python file=chat.py
+import os
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.environ["MIXLAYER_API_KEY"],
+    base_url="https://models.mixlayer.ai/v1",
+)
+
+response = client.chat.completions.create(
+    model="qwen/qwen3.5-4b-free",
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "Tell me a fun fact about chihuahuas."},
+    ],
+)
+
+print(response.choices[0].message.content)
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```typescript file=chat.ts
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env["MIXLAYER_API_KEY"]!,
+  baseURL: "https://models.mixlayer.ai/v1",
+});
+
+const response = await openai.chat.completions.create({
+  model: "qwen/qwen3.5-4b-free",
+  messages: [
+    { role: "system", content: "You are a helpful assistant." },
+    { role: "user", content: "Tell me a fun fact about chihuahuas." },
+  ],
+});
+
+console.log(response.choices[0].message.content);
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```rust file=src/main.rs
+use async_openai::{
+    config::OpenAIConfig,
+    types::{ChatCompletionRequestMessage, CreateChatCompletionRequestArgs},
+    Client,
+};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let config = OpenAIConfig::new()
+        .with_api_key(std::env::var("MIXLAYER_API_KEY")?)
+        .with_api_base("https://models.mixlayer.ai/v1");
+    let client = Client::with_config(config);
+
+    let request = CreateChatCompletionRequestArgs::default()
+        .model("qwen/qwen3.5-4b-free")
+        .messages([
+            ChatCompletionRequestMessage::System(
+                "You are a helpful assistant.".into(),
+            ),
+            ChatCompletionRequestMessage::User(
+                "Tell me a fun fact about chihuahuas.".into(),
+            ),
+        ])
+        .build()?;
+
+    let response = client.chat().create(request).await?;
+    if let Some(content) = &response.choices[0].message.content {
+        println!("{content}");
+    }
+
+    Ok(())
+}
+```
+</Tabs.Tab>
+</Tabs>
+
+## Streaming
+
+Pass `stream: true` to receive tokens as Server-Sent Events as they're generated.
+
+<Tabs items={['curl', 'Python', 'TypeScript', 'Rust']}>
+<Tabs.Tab>
+```bash file=stream.sh
+curl https://models.mixlayer.ai/v1/chat/completions \
+  -H "Authorization: Bearer $MIXLAYER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "qwen/qwen3.5-4b-free",
+    "stream": true,
+    "messages": [
+      {"role": "user", "content": "Tell me a fun fact about chihuahuas."}
+    ]
+  }'
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```python file=stream.py
+import os
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.environ["MIXLAYER_API_KEY"],
+    base_url="https://models.mixlayer.ai/v1",
+)
+
+stream = client.chat.completions.create(
+    model="qwen/qwen3.5-4b-free",
+    messages=[{"role": "user", "content": "Tell me a fun fact about chihuahuas."}],
+    stream=True,
+)
+
+for chunk in stream:
+    delta = chunk.choices[0].delta
+    if delta.content:
+        print(delta.content, end="", flush=True)
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```typescript file=stream.ts
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env["MIXLAYER_API_KEY"]!,
+  baseURL: "https://models.mixlayer.ai/v1",
+});
+
+const stream = await openai.chat.completions.create({
+  model: "qwen/qwen3.5-4b-free",
+  messages: [{ role: "user", content: "Tell me a fun fact about chihuahuas." }],
+  stream: true,
+});
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk.choices[0].delta.content ?? "");
+}
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```rust file=src/main.rs
+use async_openai::{config::OpenAIConfig, types::CreateChatCompletionRequestArgs, Client};
+use futures::StreamExt;
+use std::io::Write;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let config = OpenAIConfig::new()
+        .with_api_key(std::env::var("MIXLAYER_API_KEY")?)
+        .with_api_base("https://models.mixlayer.ai/v1");
+    let client = Client::with_config(config);
+
+    let request = CreateChatCompletionRequestArgs::default()
+        .model("qwen/qwen3.5-4b-free")
+        .messages([async_openai::types::ChatCompletionRequestMessage::User(
+            "Tell me a fun fact about chihuahuas.".into(),
+        )])
+        .stream(true)
+        .build()?;
+
+    let mut stream = client.chat().create_stream(request).await?;
+    while let Some(result) = stream.next().await {
+        let response = result?;
+        if let Some(content) = &response.choices[0].delta.content {
+            print!("{content}");
+            std::io::stdout().flush()?;
+        }
+    }
+
+    Ok(())
+}
+```
+</Tabs.Tab>
+</Tabs>
+
+<Callout type="info">
+  See [Chat Completions](/chat-completions) for the full list of supported
+  request parameters and the streaming event shape.
+</Callout>
+
+## Vercel AI SDK
+
+Mixlayer publishes a first-party provider for the [Vercel AI SDK](https://sdk.vercel.ai/).
+
+```bash
+npm install ai @mixlayer/ai-sdk-provider
+```
+
+```typescript file=route.ts
+import { streamText } from "ai";
+import { mixlayer } from "@mixlayer/ai-sdk-provider";
+import type { NextRequest } from "next/server";
+
+export async function POST(req: NextRequest) {
+  const { prompt } = await req.json();
+
+  const result = streamText({
+    model: mixlayer("qwen/qwen3.5-4b-free"),
+    prompt,
+    maxTokens: 1000,
+  });
+
+  return result.toDataStreamResponse();
+}
+```

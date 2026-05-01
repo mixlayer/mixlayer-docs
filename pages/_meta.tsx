@@ -3,10 +3,23 @@ import { Meta } from "nextra";
 const meta: Meta = {
   index: "Introduction",
 
-  "api-clients": {
-    title: "API Clients",
+  "-----getting-started": {
+    type: "separator",
+    title: <div className="text-zinc-50 uppercase -mb-2">Getting Started</div>,
   },
-  "-----": {
+  quickstart: "Quickstart",
+  "client-libraries": "Client Libraries",
+  models: "Models",
+
+  "-----guides": {
+    type: "separator",
+    title: <div className="text-zinc-50 uppercase -mb-2">Guides</div>,
+  },
+  "chat-completions": "Chat Completions",
+  "tool-calling": "Tool Calling",
+  reasoning: "Reasoning",
+
+  "-----platform": {
     type: "separator",
     title: <div className="text-zinc-50 uppercase -mb-2">Platform</div>,
   },

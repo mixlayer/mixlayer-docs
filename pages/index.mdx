@@ -4,21 +4,26 @@ description: Welcome to the Mixlayer Docs!
 ---
 
 # Introduction
- 
+
 Welcome! 👋
 
-Mixlayer is an inference platform for open source AI models. 
-
-Get started quickly by using Mixlayer's OpenAI-compatible REST API, which is a drop-in replacement in most existing applications: 
+Mixlayer is an inference platform for open source AI models. We expose an OpenAI-compatible REST API, so you can drop Mixlayer into most existing applications by swapping the base URL and API key.
 
 ```bash
 curl https://models.mixlayer.ai/v1/chat/completions \
   -H "Authorization: Bearer $MIXLAYER_API_KEY" \
-  -d '{"model": "meta/llama3.1-8b-instruct-free", "messages": [...]}'
+  -d '{"model": "qwen/qwen3.5-4b-free", "messages": [...]}'
 ```
 
-## Next Steps
+## Get started
 
-1. **Sign up** at [console.mixlayer.ai](https://console.mixlayer.com/sign-up)
-2. [**Get your API key**](https://console.mixlayer.com/app/api-keys) from the Console
+1. **Sign up** at [console.mixlayer.com](https://console.mixlayer.com/sign-up) and grab an [API key](https://console.mixlayer.com/app/api-keys).
+2. Walk through the **[Quickstart](/quickstart)** to make your first request.
+3. Browse the **[Models](/models)** catalog to pick the right model for your workload.
+4. Read the **[Chat Completions](/chat-completions)** reference for every supported parameter.
 
+## Guides
+
+- **[Client Libraries](/client-libraries)** — Python, TypeScript, Rust, and curl examples
+- **[Tool Calling](/tool-calling)** — let the model invoke your functions
+- **[Reasoning](/reasoning)** — read the model's chain of thought

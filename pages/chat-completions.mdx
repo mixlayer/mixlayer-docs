@@ -1,0 +1,331 @@
+---
+title: Chat Completions
+description: Full reference for the Mixlayer Chat Completions endpoint, including sampling, streaming, response format, and error handling
+---
+
+import { Tabs, Callout } from 'nextra/components'
+
+# Chat Completions
+
+`POST https://models.mixlayer.ai/v1/chat/completions`
+
+Generate a chat completion from one of the [available models](/models). Mixlayer's API is OpenAI-compatible, so existing OpenAI client libraries work without modification — see [Client Libraries](/client-libraries) for examples in Python, TypeScript, Rust, and curl.
+
+This page is the canonical reference for every supported request parameter.
+
+## Authentication
+
+Every request requires a Bearer token in the `Authorization` header. Create one in the [Mixlayer console](https://console.mixlayer.com/app/api-keys).
+
+```bash
+Authorization: Bearer $MIXLAYER_API_KEY
+```
+
+## Minimal request
+
+```bash
+curl https://models.mixlayer.ai/v1/chat/completions \
+  -H "Authorization: Bearer $MIXLAYER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "qwen/qwen3.5-4b-free",
+    "messages": [
+      {"role": "user", "content": "Hello!"}
+    ]
+  }'
+```
+
+## Messages
+
+The `messages` field is a list of message objects in turn order. Each message has a `role` and `content`.
+
+| Role | Description |
+| --- | --- |
+| `system` | High-level instructions or persona for the assistant. Typically the first message. |
+| `user` | A user turn. |
+| `assistant` | A previous assistant turn. Include these to continue a multi-turn conversation. May also carry `tool_calls` from a previous turn. |
+| `tool` | The result of a tool call. Must include `tool_call_id` referencing the assistant's `tool_calls[].id`. See [Tool Calling](/tool-calling). |
+
+Assistant messages from previous turns may also include `reasoning_content` from a thinking-mode response — see [Reasoning](/reasoning).
+
+## Sampling parameters
+
+Sampling parameters control how the model selects each next token.
+
+| Parameter | Type | Range | Description |
+| --- | --- | --- | --- |
+| `temperature` | float | — | Controls randomness. Lower values (~0.2) make output more deterministic; higher values (~1.0+) make it more diverse. |
+| `top_p` | float | 0.0–1.0 | Nucleus sampling: only consider tokens whose cumulative probability is below `top_p`. |
+| `top_k` | int | — | Only consider the top-`k` most likely tokens at each step. |
+
+Sampling defaults vary by model. See the [per-model notes](/models#per-model-notes) for recommended settings — for example, Qwen 3.5 has different recommended values for thinking mode vs. instruct mode.
+
+## Penalty parameters
+
+Penalty parameters discourage the model from repeating tokens.
+
+| Parameter | Type | Range | Description |
+| --- | --- | --- | --- |
+| `frequency_penalty` | float | -2.0 to 2.0 | Penalizes tokens proportional to how often they've already appeared. Positive values reduce repetition. |
+| `presence_penalty` | float | -2.0 to 2.0 | Penalizes tokens that have appeared at all, regardless of count. Positive values encourage topical novelty. |
+| `repetition_penalty` | float | 0.0 to 2.0 | Multiplicative penalty on tokens already in the context. `1.0` is no penalty; values above `1.0` penalize repetition; values below `1.0` encourage it. |
+
+## Output control
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `max_completion_tokens` | int | Maximum tokens to generate. Takes precedence over `max_tokens` if both are set. |
+| `max_tokens` | int | Legacy alias for `max_completion_tokens`. |
+| `stop` | array of strings | Sequences that will halt generation if produced. The stop sequence itself is not included in the output. |
+| `seed` | int | Best-effort deterministic sampling. Same seed + same parameters + same input should produce the same output. |
+| `stream` | bool | If `true`, stream the response as Server-Sent Events. Defaults to `false`. |
+
+## Response format
+
+Use `response_format` to constrain the model's output structure.
+
+```json
+{ "response_format": { "type": "text" } }
+```
+
+| `type` | Behavior | Requires `json_schema` |
+| --- | --- | --- |
+| `text` | No constraint. Default. | No |
+| `json_object` | Output must be a syntactically valid JSON object. | No |
+| `json_schema` | Output must conform to the supplied JSON Schema. | Yes |
+
+Example of a constrained JSON schema response:
+
+```json
+{
+  "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "city": { "type": "string" },
+          "country": { "type": "string" }
+        },
+        "required": ["city", "country"]
+      },
+      "strict": true
+    }
+  }
+}
+```
+
+<Callout type="warning">
+  `response_format: json_schema` cannot be combined with thinking mode
+  (`thinking: true` or `reasoning_effort`). The gateway returns an
+  `invalid_response_format` error if both are set.
+</Callout>
+
+## Tool calling
+
+Pass an array of tools the model can invoke. See the [Tool Calling](/tool-calling) guide for the full request/response loop.
+
+```json
+{
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_weather",
+        "description": "Get the current weather for a city.",
+        "parameters": {
+          "type": "object",
+          "properties": { "city": { "type": "string" } },
+          "required": ["city"]
+        }
+      }
+    }
+  ]
+}
+```
+
+## Reasoning
+
+Pass `thinking: true` (or `reasoning_effort: "low" | "medium" | "high"`) to enable extended chain-of-thought reasoning on supported models. Reasoning is returned in a separate `reasoning_content` field on the assistant message — see the [Reasoning](/reasoning) guide.
+
+## Streaming
+
+When `stream: true`, the response is a stream of `chat.completion.chunk` events delivered as Server-Sent Events. Each event has the same envelope as a non-streaming response, but `choices[].message` is replaced with `choices[].delta`, which contains only the new content for that chunk.
+
+```
+data: {"id":"...","object":"chat.completion.chunk","choices":[{"index":0,"delta":{"role":"assistant"},"finish_reason":null}]}
+
+data: {"id":"...","object":"chat.completion.chunk","choices":[{"index":0,"delta":{"content":"Chihuahuas "},"finish_reason":null}]}
+
+data: {"id":"...","object":"chat.completion.chunk","choices":[{"index":0,"delta":{"content":"are tiny."},"finish_reason":"stop"}]}
+
+data: [DONE]
+```
+
+The `delta` object contains whichever fields are new in that chunk:
+
+- `role` — present only on the first chunk
+- `content` — incremental visible text
+- `reasoning_content` — incremental reasoning text (thinking mode only)
+- `tool_calls` — incremental tool call data (when the model invokes a tool)
+
+`finish_reason` is `null` until the final chunk. Possible terminal values:
+
+| `finish_reason` | Meaning |
+| --- | --- |
+| `stop` | Model finished naturally or hit a `stop` sequence. |
+| `length` | Hit `max_completion_tokens` / `max_tokens`. |
+| `tool_calls` | Model invoked a tool. |
+
+A streaming example in your language of choice:
+
+<Tabs items={['curl', 'Python', 'TypeScript', 'Rust']}>
+<Tabs.Tab>
+```bash file=stream.sh
+curl https://models.mixlayer.ai/v1/chat/completions \
+  -H "Authorization: Bearer $MIXLAYER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "qwen/qwen3.5-4b-free",
+    "stream": true,
+    "messages": [{"role": "user", "content": "Count to five."}]
+  }'
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```python file=stream.py
+import os
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.environ["MIXLAYER_API_KEY"],
+    base_url="https://models.mixlayer.ai/v1",
+)
+
+stream = client.chat.completions.create(
+    model="qwen/qwen3.5-4b-free",
+    messages=[{"role": "user", "content": "Count to five."}],
+    stream=True,
+)
+
+for chunk in stream:
+    if chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, end="", flush=True)
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```typescript file=stream.ts
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env["MIXLAYER_API_KEY"]!,
+  baseURL: "https://models.mixlayer.ai/v1",
+});
+
+const stream = await openai.chat.completions.create({
+  model: "qwen/qwen3.5-4b-free",
+  messages: [{ role: "user", content: "Count to five." }],
+  stream: true,
+});
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk.choices[0].delta.content ?? "");
+}
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```rust file=src/main.rs
+use async_openai::{config::OpenAIConfig, types::CreateChatCompletionRequestArgs, Client};
+use futures::StreamExt;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let config = OpenAIConfig::new()
+        .with_api_key(std::env::var("MIXLAYER_API_KEY")?)
+        .with_api_base("https://models.mixlayer.ai/v1");
+    let client = Client::with_config(config);
+
+    let request = CreateChatCompletionRequestArgs::default()
+        .model("qwen/qwen3.5-4b-free")
+        .messages([async_openai::types::ChatCompletionRequestMessage::User(
+            "Count to five.".into(),
+        )])
+        .stream(true)
+        .build()?;
+
+    let mut stream = client.chat().create_stream(request).await?;
+    while let Some(result) = stream.next().await {
+        if let Some(content) = &result?.choices[0].delta.content {
+            print!("{content}");
+        }
+    }
+    Ok(())
+}
+```
+</Tabs.Tab>
+</Tabs>
+
+## Response shape
+
+A non-streaming response:
+
+```json
+{
+  "id": "chatcmpl-abc123...",
+  "object": "chat.completion",
+  "created": 1735689600,
+  "model": "qwen/qwen3.5-4b-free",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Chihuahuas have the largest brain-to-body ratio of any dog breed."
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 14,
+    "completion_tokens": 17,
+    "total_tokens": 31
+  }
+}
+```
+
+When the model invokes a tool, `message.content` will be empty and `message.tool_calls` will contain the call. When thinking mode is enabled, `message.reasoning_content` will hold the model's chain of thought.
+
+## OpenAI compatibility notes
+
+The following standard OpenAI parameters are **not currently supported** by Mixlayer. Requests that include them are accepted and silently ignored:
+
+- `n` — multiple completions per request
+- `min_p` — minimum probability sampling
+- `tool_choice` — forcing a specific tool selection (the model decides automatically based on `tools`)
+- `logprobs`, `top_logprobs`
+- `user`
+- `logit_bias`
+
+If your application depends on any of these, [open an issue](https://github.com/mixlayer) or reach out on [Discord](https://discord.gg/dWzh65e7tP).
+
+## Errors
+
+Errors follow OpenAI's error envelope:
+
+```json
+{
+  "error": {
+    "message": "Model not found.",
+    "type": "model_not_found",
+    "code": "model_not_found"
+  }
+}
+```
+
+| HTTP status | `type` | Common causes |
+| --- | --- | --- |
+| 400 | `invalid_request_error` | Malformed JSON, parameter out of range (e.g. `presence_penalty` outside -2.0 to 2.0), invalid tool schema, invalid `response_format`. |
+| 400 | `model_not_found` | The requested `model` SKU doesn't exist or isn't authorized for your API key. |
+| 401 | `authentication_error` | Missing or invalid API key. |
+| 403 | `permission_error` | API key doesn't have access to the requested model. |
+| 500 | `server_error` | Internal generation failure. Safe to retry with backoff. |
