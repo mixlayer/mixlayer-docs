@@ -236,22 +236,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Vercel AI SDK
 
-Mixlayer publishes a first-party provider for the [Vercel AI SDK](https://sdk.vercel.ai/).
+You can also use Mixlayer via the OpenAI-compatible provider in the [Vercel AI SDK](https://sdk.vercel.ai/).
 
 ```bash
-npm install ai @mixlayer/ai-sdk-provider
+npm install ai @ai-sdk/openai
 ```
 
 ```typescript file=route.ts
+import { createOpenAI } from "@ai-sdk/openai";
 import { streamText } from "ai";
-import { mixlayer } from "@mixlayer/ai-sdk-provider";
 import type { NextRequest } from "next/server";
+
+const mixlayer = createOpenAI({
+  apiKey: process.env.MIXLAYER_API_KEY,
+  baseURL: "https://models.mixlayer.ai/v1",
+});
 
 export async function POST(req: NextRequest) {
   const { prompt } = await req.json();
 
   const result = streamText({
-    model: mixlayer("qwen/qwen3.5-4b-free"),
+    model: mixlayer.chat("qwen/qwen3.5-397b-a17b"),
     prompt,
     maxTokens: 1000,
   });
