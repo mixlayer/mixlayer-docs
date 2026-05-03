@@ -44,3 +44,26 @@ body {
 p {
   @apply font-sans;
 }
+
+/* Ensure sidebar section headings and links remain visible in light mode. */
+.nextra-sidebar-container,
+.nextra-sidebar-container a,
+.nextra-sidebar-container h1,
+.nextra-sidebar-container h2,
+.nextra-sidebar-container h3,
+.nextra-sidebar-container h4,
+.nextra-sidebar-container h5,
+.nextra-sidebar-container h6 {
+  color: rgb(24 24 27);
+}
+
+.dark .nextra-sidebar-container,
+.dark .nextra-sidebar-container a,
+.dark .nextra-sidebar-container h1,
+.dark .nextra-sidebar-container h2,
+.dark .nextra-sidebar-container h3,
+.dark .nextra-sidebar-container h4,
+.dark .nextra-sidebar-container h5,
+.dark .nextra-sidebar-container h6 {
+  color: rgb(244 244 245);
+}
