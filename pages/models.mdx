@@ -1,0 +1,48 @@
+---
+title: Models
+description: Available models on Mixlayer with context windows, capabilities, and tuning notes
+---
+
+import { ModelCapabilities, ModelUseCases } from '../components/ModelCatalog'
+import { Callout } from 'nextra/components'
+
+# Models
+
+Mixlayer hosts a curated set of open-source models served behind the OpenAI-compatible API. Pass a model's **identifier** as the `model` field on any request to `https://models.mixlayer.ai/v1/chat/completions`.
+
+<ModelCapabilities />
+
+<Callout type="info">
+  Pricing for each model is listed on the [Pricing](/pricing) page. To see the
+  exact set of models authorized for your API key, call `GET /v1/models`.
+</Callout>
+
+## Choosing a model
+
+Use the table below as a starting point — these are the workloads each model is best suited to and the reason it's the right pick.
+
+<ModelUseCases />
+
+## Per-model notes
+
+Different model families have different recommended sampling settings and behavior. The notes below come from the model authors' published guidance, adapted to the parameters Mixlayer's API exposes.
+
+### Qwen 3.5
+
+Qwen 3.5 models support both a **thinking mode** (extended chain-of-thought reasoning, returned in `reasoning_content`) and a **non-thinking / instruct mode**. See [Reasoning](/reasoning) for how to toggle between them.
+
+Qwen recommends the following sampling settings depending on mode and task:
+
+| Mode | Recommended sampling |
+| --- | --- |
+| **Thinking — general tasks** | `temperature=1.0`, `top_p=0.95`, `top_k=20`, `presence_penalty=0.0`, `repetition_penalty=1.0` |
+| **Thinking — precise coding** (e.g. WebDev) | `temperature=0.6`, `top_p=0.95`, `top_k=20`, `presence_penalty=0.0`, `repetition_penalty=1.0` |
+| **Instruct (non-thinking)** | `temperature=0.7`, `top_p=0.80`, `top_k=20`, `presence_penalty=1.5`, `repetition_penalty=1.0` |
+
+<Callout type="info">
+  Qwen's published guidance also recommends `min_p=0.0`. Mixlayer's API does
+  not currently expose a `min_p` parameter, so it can be omitted — the gateway
+  applies a model-appropriate default.
+</Callout>
+
+For the MoE variants (`qwen3.5-35b-a3b`, `qwen3.5-122b-a10b`, `qwen3.5-397b-a17b`), the active-parameter count is what governs latency and cost, while the total parameter count governs capability. The `397b-a17b` model is the strongest and is the recommended choice for hard reasoning, coding, and agentic workloads.

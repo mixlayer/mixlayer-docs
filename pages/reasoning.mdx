@@ -1,0 +1,186 @@
+---
+title: Reasoning
+description: Enable extended chain-of-thought reasoning and read the model's thinking
+---
+
+import { Tabs, Callout } from 'nextra/components'
+
+# Reasoning
+
+Some Mixlayer models support an extended **thinking mode** where the model produces an internal chain of thought before its visible answer. The reasoning is returned in a separate `reasoning_content` field on the assistant message — you can show it to users, log it for debugging, or just ignore it.
+
+## Enabling thinking
+
+There are two equivalent ways to enable thinking on a request:
+
+```json
+{ "thinking": true }
+```
+
+or, for OpenAI compatibility:
+
+```json
+{ "reasoning_effort": "low" | "medium" | "high" }
+```
+
+Both toggle the same underlying behavior. `reasoning_effort` is accepted as an alias and currently maps to a boolean enable/disable — the specific effort level is reserved for future use.
+
+To explicitly disable thinking on a model that defaults to it, send `thinking: false`.
+
+## Reading reasoning_content
+
+A non-streaming response with thinking enabled includes both fields on the assistant message:
+
+```json
+{
+  "choices": [{
+    "index": 0,
+    "message": {
+      "role": "assistant",
+      "reasoning_content": "Let me work through this. The user is asking about...",
+      "content": "The answer is 42."
+    },
+    "finish_reason": "stop"
+  }]
+}
+```
+
+`content` is the visible answer you'd typically show to the user. `reasoning_content` is the model's chain of thought — useful for debugging, evaluation, or building "show your work" UI.
+
+<Callout type="info">
+  Mixlayer extracts reasoning from `<think>...</think>` tags in the model's
+  raw output and routes it to `reasoning_content` automatically. You will
+  never see the tags in either field.
+</Callout>
+
+## Examples
+
+<Tabs items={['curl', 'Python', 'TypeScript', 'Rust']}>
+<Tabs.Tab>
+```bash file=reasoning.sh
+curl https://models.mixlayer.ai/v1/chat/completions \
+  -H "Authorization: Bearer $MIXLAYER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "qwen/qwen3.5-27b",
+    "thinking": true,
+    "messages": [
+      {"role": "user", "content": "If a train leaves at 3pm going 60mph and another leaves at 4pm going 80mph, when do they meet?"}
+    ]
+  }'
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```python file=reasoning.py
+import os
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.environ["MIXLAYER_API_KEY"],
+    base_url="https://models.mixlayer.ai/v1",
+)
+
+response = client.chat.completions.create(
+    model="qwen/qwen3.5-27b",
+    messages=[{"role": "user", "content": "What is 17 * 23?"}],
+    extra_body={"thinking": True},
+)
+
+message = response.choices[0].message
+# `reasoning_content` is a Mixlayer extension; access via model_extra.
+reasoning = getattr(message, "reasoning_content", None) or message.model_extra.get("reasoning_content")
+print("Reasoning:", reasoning)
+print("Answer:   ", message.content)
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```typescript file=reasoning.ts
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env["MIXLAYER_API_KEY"]!,
+  baseURL: "https://models.mixlayer.ai/v1",
+});
+
+const response = await openai.chat.completions.create({
+  model: "qwen/qwen3.5-27b",
+  messages: [{ role: "user", content: "What is 17 * 23?" }],
+  // @ts-expect-error -- Mixlayer extension
+  thinking: true,
+});
+
+const message = response.choices[0].message as typeof response.choices[0].message & {
+  reasoning_content?: string;
+};
+console.log("Reasoning:", message.reasoning_content);
+console.log("Answer:   ", message.content);
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```rust file=src/main.rs
+// async-openai doesn't expose `thinking` or `reasoning_content` natively yet,
+// so use reqwest and parse the JSON directly.
+use reqwest::Client;
+use serde_json::{json, Value};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let api_key = std::env::var("MIXLAYER_API_KEY")?;
+
+    let body = json!({
+        "model": "qwen/qwen3.5-27b",
+        "thinking": true,
+        "messages": [{"role": "user", "content": "What is 17 * 23?"}]
+    });
+
+    let response: Value = Client::new()
+        .post("https://models.mixlayer.ai/v1/chat/completions")
+        .bearer_auth(api_key)
+        .json(&body)
+        .send()
+        .await?
+        .json()
+        .await?;
+
+    let message = &response["choices"][0]["message"];
+    println!("Reasoning: {}", message["reasoning_content"]);
+    println!("Answer:    {}", message["content"]);
+    Ok(())
+}
+```
+</Tabs.Tab>
+</Tabs>
+
+## Streaming reasoning
+
+When `stream: true`, reasoning arrives in `delta.reasoning_content` chunks alongside `delta.content` chunks. They interleave in the order the model produces them — typically reasoning first, then visible content.
+
+```
+data: {"choices":[{"delta":{"role":"assistant"}}]}
+data: {"choices":[{"delta":{"reasoning_content":"Let me think. "}}]}
+data: {"choices":[{"delta":{"reasoning_content":"17 * 23 = 17 * 20 + 17 * 3 = 340 + 51."}}]}
+data: {"choices":[{"delta":{"content":"17 * 23 = 391."},"finish_reason":"stop"}]}
+```
+
+To render reasoning and content in separate UI areas, route each delta based on which field is set:
+
+```python
+for chunk in stream:
+    delta = chunk.choices[0].delta
+    extra = delta.model_extra or {}
+    if extra.get("reasoning_content"):
+        update_reasoning_pane(extra["reasoning_content"])
+    if delta.content:
+        update_answer_pane(delta.content)
+```
+
+## Constraints
+
+<Callout type="warning">
+  Thinking mode is incompatible with `response_format: json_schema`. The
+  gateway returns an error if both are set on the same request. If you need
+  structured output from a reasoning model, use `response_format: json_object`
+  with explicit instructions in the prompt instead.
+</Callout>
+
+Thinking is supported on the Qwen 3.5 family. See [Models](/models) for the up-to-date list of supported models and their recommended sampling settings for thinking vs. non-thinking modes.

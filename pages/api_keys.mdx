@@ -11,3 +11,5 @@ API keys are used to authenticate requests to the Mixlayer API. You can create a
 <Image className="mt-4 rounded-lg border border-zinc-800" src="/console-api-keys.png" alt="API Keys" width={2072} height={866} />
 
 Select `+ New Key` to create a new API key. Once the key is created, be sure to save it somewhere safe. You will not be able to access it again after you leave the page. We are unable to recover your key if you lose it.
+
+When creating a key, you can give it a name to help identify what it's used for, and optionally set an expiration date after which the key will stop working. You can also rotate an existing key from the console — rotation issues a new secret while preserving the key's name and settings, so you can swap it into your application without creating a new entry.

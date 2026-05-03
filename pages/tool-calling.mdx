@@ -1,0 +1,324 @@
+---
+title: Tool Calling
+description: Let Mixlayer models call your functions to fetch data or take action
+---
+
+import { Tabs, Callout } from 'nextra/components'
+
+# Tool Calling
+
+Tool calling lets the model decide to invoke one of your functions to fetch data or take action — for example, looking up the weather, querying a database, or sending an email. The model doesn't execute the tool itself; it returns the function name and arguments, your code runs the function, and you send the result back in a follow-up message.
+
+## The loop
+
+1. **Define your tools** in the `tools` array on the request.
+2. **Send the request.** If the model decides to invoke a tool, the response will have `finish_reason: "tool_calls"` and the assistant message will include a `tool_calls` array.
+3. **Execute the tool** in your code.
+4. **Send a follow-up request** that includes the original messages, the assistant's tool-call message, and a new `tool` role message containing the result.
+5. The model returns its final answer, conditioned on the tool result.
+
+## Defining tools
+
+Each tool is a JSON object with `type: "function"` and a `function` definition. The `parameters` field is a [JSON Schema](https://json-schema.org/) describing the tool's arguments.
+
+```json
+{
+  "type": "function",
+  "function": {
+    "name": "get_weather",
+    "description": "Get the current weather for a city.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "city": {
+          "type": "string",
+          "description": "City name, e.g. 'San Francisco'"
+        }
+      },
+      "required": ["city"]
+    },
+    "strict": true
+  }
+}
+```
+
+Set `strict: true` if you want the model's arguments to be guaranteed to match the schema.
+
+## Worked example: weather lookup
+
+The full loop, end to end:
+
+<Tabs items={['curl', 'Python', 'TypeScript', 'Rust']}>
+<Tabs.Tab>
+```bash file=tool-call.sh
+# Step 1: Send the request with tools defined.
+curl https://models.mixlayer.ai/v1/chat/completions \
+  -H "Authorization: Bearer $MIXLAYER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "qwen/qwen3.5-27b",
+    "messages": [
+      {"role": "user", "content": "What is the weather in Paris?"}
+    ],
+    "tools": [{
+      "type": "function",
+      "function": {
+        "name": "get_weather",
+        "description": "Get the current weather for a city.",
+        "parameters": {
+          "type": "object",
+          "properties": {"city": {"type": "string"}},
+          "required": ["city"]
+        }
+      }
+    }]
+  }'
+
+# Response includes:
+#   "tool_calls": [{
+#     "id": "call_abc123",
+#     "type": "function",
+#     "function": {"name": "get_weather", "arguments": "{\"city\":\"Paris\"}"}
+#   }]
+# and "finish_reason": "tool_calls"
+
+# Step 2: Run the tool yourself, then send a follow-up with the result.
+curl https://models.mixlayer.ai/v1/chat/completions \
+  -H "Authorization: Bearer $MIXLAYER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "qwen/qwen3.5-27b",
+    "messages": [
+      {"role": "user", "content": "What is the weather in Paris?"},
+      {"role": "assistant", "tool_calls": [{
+        "id": "call_abc123",
+        "type": "function",
+        "function": {"name": "get_weather", "arguments": "{\"city\":\"Paris\"}"}
+      }]},
+      {"role": "tool", "tool_call_id": "call_abc123", "content": "{\"temp_c\": 18, \"condition\": \"cloudy\"}"}
+    ]
+  }'
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```python file=tool_call.py
+import json
+import os
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.environ["MIXLAYER_API_KEY"],
+    base_url="https://models.mixlayer.ai/v1",
+)
+
+tools = [{
+    "type": "function",
+    "function": {
+        "name": "get_weather",
+        "description": "Get the current weather for a city.",
+        "parameters": {
+            "type": "object",
+            "properties": {"city": {"type": "string"}},
+            "required": ["city"],
+        },
+    },
+}]
+
+def get_weather(city: str) -> dict:
+    return {"temp_c": 18, "condition": "cloudy"}
+
+messages = [{"role": "user", "content": "What is the weather in Paris?"}]
+
+# Step 1: Ask the model.
+response = client.chat.completions.create(
+    model="qwen/qwen3.5-27b",
+    messages=messages,
+    tools=tools,
+)
+assistant_message = response.choices[0].message
+messages.append(assistant_message)
+
+# Step 2: Execute the tool calls and send results back.
+for call in assistant_message.tool_calls or []:
+    args = json.loads(call.function.arguments)
+    result = get_weather(**args)
+    messages.append({
+        "role": "tool",
+        "tool_call_id": call.id,
+        "content": json.dumps(result),
+    })
+
+# Step 3: Final answer.
+final = client.chat.completions.create(
+    model="qwen/qwen3.5-27b",
+    messages=messages,
+    tools=tools,
+)
+print(final.choices[0].message.content)
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```typescript file=toolCall.ts
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env["MIXLAYER_API_KEY"]!,
+  baseURL: "https://models.mixlayer.ai/v1",
+});
+
+const tools = [{
+  type: "function" as const,
+  function: {
+    name: "get_weather",
+    description: "Get the current weather for a city.",
+    parameters: {
+      type: "object",
+      properties: { city: { type: "string" } },
+      required: ["city"],
+    },
+  },
+}];
+
+function getWeather(city: string) {
+  return { temp_c: 18, condition: "cloudy" };
+}
+
+const messages: OpenAI.ChatCompletionMessageParam[] = [
+  { role: "user", content: "What is the weather in Paris?" },
+];
+
+const response = await openai.chat.completions.create({
+  model: "qwen/qwen3.5-27b",
+  messages,
+  tools,
+});
+
+const assistant = response.choices[0].message;
+messages.push(assistant);
+
+for (const call of assistant.tool_calls ?? []) {
+  const args = JSON.parse(call.function.arguments);
+  const result = getWeather(args.city);
+  messages.push({
+    role: "tool",
+    tool_call_id: call.id,
+    content: JSON.stringify(result),
+  });
+}
+
+const final = await openai.chat.completions.create({
+  model: "qwen/qwen3.5-27b",
+  messages,
+  tools,
+});
+console.log(final.choices[0].message.content);
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```rust file=src/main.rs
+use async_openai::{
+    config::OpenAIConfig,
+    types::{
+        ChatCompletionMessageToolCall, ChatCompletionRequestAssistantMessageArgs,
+        ChatCompletionRequestMessage, ChatCompletionRequestToolMessageArgs,
+        ChatCompletionToolArgs, CreateChatCompletionRequestArgs, FunctionObjectArgs,
+    },
+    Client,
+};
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let config = OpenAIConfig::new()
+        .with_api_key(std::env::var("MIXLAYER_API_KEY")?)
+        .with_api_base("https://models.mixlayer.ai/v1");
+    let client = Client::with_config(config);
+
+    let tools = vec![ChatCompletionToolArgs::default()
+        .function(
+            FunctionObjectArgs::default()
+                .name("get_weather")
+                .description("Get the current weather for a city.")
+                .parameters(json!({
+                    "type": "object",
+                    "properties": { "city": { "type": "string" } },
+                    "required": ["city"]
+                }))
+                .build()?,
+        )
+        .build()?];
+
+    let mut messages: Vec<ChatCompletionRequestMessage> = vec![
+        ChatCompletionRequestMessage::User("What is the weather in Paris?".into()),
+    ];
+
+    let response = client
+        .chat()
+        .create(
+            CreateChatCompletionRequestArgs::default()
+                .model("qwen/qwen3.5-27b")
+                .messages(messages.clone())
+                .tools(tools.clone())
+                .build()?,
+        )
+        .await?;
+
+    let assistant = response.choices[0].message.clone();
+    let calls = assistant.tool_calls.clone().unwrap_or_default();
+
+    messages.push(ChatCompletionRequestMessage::Assistant(
+        ChatCompletionRequestAssistantMessageArgs::default()
+            .tool_calls(calls.clone())
+            .build()?,
+    ));
+
+    for call in calls {
+        let result = json!({ "temp_c": 18, "condition": "cloudy" });
+        messages.push(ChatCompletionRequestMessage::Tool(
+            ChatCompletionRequestToolMessageArgs::default()
+                .tool_call_id(call.id)
+                .content(result.to_string())
+                .build()?,
+        ));
+    }
+
+    let final_response = client
+        .chat()
+        .create(
+            CreateChatCompletionRequestArgs::default()
+                .model("qwen/qwen3.5-27b")
+                .messages(messages)
+                .tools(tools)
+                .build()?,
+        )
+        .await?;
+    if let Some(content) = final_response.choices[0].message.content.as_ref() {
+        println!("{content}");
+    }
+    Ok(())
+}
+```
+</Tabs.Tab>
+</Tabs>
+
+## Streaming with tool calls
+
+When `stream: true` and the model invokes a tool, `tool_calls` arrive in deltas across multiple chunks. Each chunk's `delta.tool_calls[].function.arguments` is a partial JSON string fragment — accumulate them per `tool_calls[].index` until the final chunk arrives with `finish_reason: "tool_calls"`.
+
+```
+data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_abc","function":{"name":"get_weather","arguments":""}}]}}]}
+data: {"choices":[{"delta":{"tool_calls":[{"index":0,"function":{"arguments":"{\"city\":"}}]}}]}
+data: {"choices":[{"delta":{"tool_calls":[{"index":0,"function":{"arguments":"\"Paris\"}"}}]}}]}
+data: {"choices":[{"delta":{},"finish_reason":"tool_calls"}]}
+```
+
+## Notes
+
+<Callout type="info">
+  Mixlayer does not currently support the OpenAI `tool_choice` parameter. The
+  model decides automatically whether to invoke a tool based on the
+  conversation. If you need to force a tool call, prompt the model explicitly
+  in the system or user message.
+</Callout>
+
+Tool calling is supported on the Qwen 3.5 family. See [Models](/models) for the up-to-date list of capable models.
