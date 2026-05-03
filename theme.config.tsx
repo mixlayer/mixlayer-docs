@@ -15,7 +15,7 @@ const config: DocsThemeConfig = {
           }}
         />
       </div>
-      <div className="text-white text-3xl font-bold">Mixlayer</div>
+      <div className="text-black dark:text-white text-3xl font-bold">Mixlayer</div>
     </div>
   ),
   nextThemes: {
