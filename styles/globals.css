@@ -1,31 +1,33 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: "Berkeley Mono";
-  src: url("/fonts/BerkeleyMono-Light.otf") format("otf"); /* Adjust path */
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Berkeley Mono";
-  src: url("/fonts/BerkeleyMono-Bold.otf") format("otf"); /* Adjust path */
-  font-weight: bold;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Berkeley Mono";
-  src: url("/fonts/BerkeleyMono-SemiBold.otf") format("otf"); /* Adjust path */
-  font-weight: 600;
-  font-style: normal;
-}
-
 :root {
-  /* --font-mono: "Times New Roman", monospace; */
-  --font-mono: "Berkeley Mono", monospace;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --border: oklch(0.922 0 0);
+  --font-mono: "JetBrains Mono", monospace;
+  --font-sans: var(--font-mono);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --border: oklch(0.269 0 0);
+}
+
+html,
+body {
+  font-family: var(--font-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
 }
 
 h1,
@@ -33,16 +35,83 @@ h2,
 h3,
 h4,
 h5,
-h6 {
-  @apply font-mono !font-light;
+h6,
+p,
+li,
+blockquote,
+figcaption,
+table,
+input,
+button,
+textarea,
+select {
+  font-family: inherit;
 }
 
-body {
-  @apply font-mono;
+.nextra-content,
+.nextra-nav-container,
+.nextra-sidebar-container,
+.nextra-toc {
+  font-family: var(--font-mono);
 }
 
-p {
-  @apply font-sans;
+.nextra-content a {
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
+
+.nextra-content :where(h1, h2, h3, h4, h5, h6) {
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.nextra-content h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 2rem;
+}
+
+.nextra-content h2 {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+
+.nextra-content :where(h3, h4, h5, h6) {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+.nextra-content :where(h1, h2, h3, h4, h5, h6)::before {
+  color: var(--muted-foreground);
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+
+.nextra-content h1::before {
+  content: "#";
+}
+
+.nextra-content h2::before {
+  content: "##";
+}
+
+.nextra-content h3::before {
+  content: "###";
+}
+
+.nextra-content h4::before {
+  content: "####";
+}
+
+.nextra-content h5::before {
+  content: "#####";
+}
+
+.nextra-content h6::before {
+  content: "######";
 }
 
 /* Ensure sidebar section headings and links remain visible in light mode. */
@@ -54,17 +123,17 @@ p {
 .nextra-sidebar-container h4,
 .nextra-sidebar-container h5,
 .nextra-sidebar-container h6 {
-  color: rgb(24 24 27);
+  color: var(--foreground);
 }
 
 .nextra-sidebar-container span,
 .nextra-sidebar-container div {
-  color: rgb(24 24 27);
+  color: var(--foreground);
 }
 
 .dark .nextra-sidebar-container span,
 .dark .nextra-sidebar-container div {
-  color: rgb(161 161 170);
+  color: var(--muted-foreground);
 }
 
 .dark .nextra-sidebar-container,
@@ -75,5 +144,5 @@ p {
 .dark .nextra-sidebar-container h4,
 .dark .nextra-sidebar-container h5,
 .dark .nextra-sidebar-container h6 {
-  color: rgb(244 244 245);
+  color: var(--foreground);
 }
