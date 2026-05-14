@@ -9,7 +9,8 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        mono: ["Berkeley Mono", "monospace"],
+        mono: ["JetBrains Mono", "monospace"],
+        sans: ["JetBrains Mono", "monospace"],
       },
     },
   },
