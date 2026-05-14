@@ -79,9 +79,14 @@ select {
   line-height: 1.75rem;
 }
 
-.nextra-content :where(h3, h4, h5, h6) {
+.nextra-content h3 {
   font-size: 1rem;
   line-height: 1.5rem;
+}
+
+.nextra-content :where(h4, h5, h6) {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
 }
 
 .nextra-content :where(h1, h2, h3, h4, h5, h6)::before {
