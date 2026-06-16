@@ -1,0 +1,38 @@
+---
+title: Pi
+description: Use Mixlayer inside the Pi coding harness with the pi-mixlayer extension
+---
+
+# Pi
+
+[Pi](https://pi.ai) is a coding agent harness. The `pi-mixlayer` extension registers Mixlayer as a Pi provider through Mixlayer's OpenAI-compatible Chat Completions API.
+
+## Create a Mixlayer API key
+
+Before installing the extension, create an API key in the [Mixlayer console](https://console.mixlayer.com/app/api-keys).
+
+Select `+ New Key`, give it a name, and copy the secret. You will not be able to view the secret again after leaving the page. See [API Keys](/api_keys) for more details on creating and managing keys.
+
+## Install the extension
+
+Run the following in your terminal:
+
+```bash
+pi install npm:pi-mixlayer
+pi
+```
+
+## Authenticate
+
+Inside Pi, run:
+
+```text
+/login
+```
+
+Select **Use an API key**, then choose **Mixlayer** from the provider list. Enter your Mixlayer API key when prompted. Pi stores the credential in `~/.pi/agent/auth.json`.
+
+## Verify
+
+Run `pi --list-models` to verify the registered models after installation.
+

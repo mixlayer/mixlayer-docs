@@ -25,6 +25,12 @@ const meta: Meta = {
   },
   pricing: "Pricing",
   api_keys: "API Keys",
+
+  "-----integrations": {
+    type: "separator",
+    title: <div className="text-zinc-50 uppercase -mb-2">Integrations</div>,
+  },
+  pi: "Pi",
 };
 
 export default meta;
