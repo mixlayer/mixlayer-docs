@@ -13,9 +13,10 @@ const meta: Meta = {
 
   "-----guides": {
     type: "separator",
-    title: <div className="text-zinc-50 uppercase -mb-2">Guides</div>,
+    title: <div className="text-zinc-50 uppercase -mb-2">Inference APIs</div>,
   },
   "chat-completions": "Chat Completions",
+  responses: "Responses",
   embeddings: {
     title: (
       <span className="inline-flex items-center gap-1.5">
