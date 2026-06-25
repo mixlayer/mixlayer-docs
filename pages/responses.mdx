@@ -1,0 +1,494 @@
+---
+title: Responses
+description: Create OpenAI Responses-compatible model responses over HTTP or WebSocket
+---
+
+import { Tabs } from 'nextra/components'
+
+# Responses
+
+`POST https://models.mixlayer.ai/v1/responses`
+
+Create a model response using the OpenAI Responses API shape. Use this endpoint when you want `input` items, function-call output items, structured text output, response storage, or Responses-style streaming events.
+
+For classic OpenAI chat compatibility, see [Chat Completions](/chat-completions).
+
+## Authentication
+
+Every request requires a Bearer token in the `Authorization` header. Create one in the [Mixlayer console](https://console.mixlayer.com/app/api-keys).
+
+```bash
+Authorization: Bearer $MIXLAYER_API_KEY
+```
+
+## Minimal request
+
+<Tabs items={['curl', 'Python', 'TypeScript', 'Rust']}>
+<Tabs.Tab>
+```bash
+curl https://models.mixlayer.ai/v1/responses \
+  -H "Authorization: Bearer $MIXLAYER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "qwen/qwen3.5-4b-free",
+    "input": "Write a one-sentence bedtime story."
+  }'
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```python file=response.py
+import os
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.environ["MIXLAYER_API_KEY"],
+    base_url="https://models.mixlayer.ai/v1",
+)
+
+response = client.responses.create(
+    model="qwen/qwen3.5-4b-free",
+    input="Write a one-sentence bedtime story.",
+)
+
+print(response.output_text)
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```typescript file=response.ts
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env["MIXLAYER_API_KEY"]!,
+  baseURL: "https://models.mixlayer.ai/v1",
+});
+
+const response = await openai.responses.create({
+  model: "qwen/qwen3.5-4b-free",
+  input: "Write a one-sentence bedtime story.",
+});
+
+console.log(response.output_text);
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```rust file=src/main.rs
+use async_openai::{config::OpenAIConfig, Client};
+use serde_json::{json, Value};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let config = OpenAIConfig::new()
+        .with_api_key(std::env::var("MIXLAYER_API_KEY")?)
+        .with_api_base("https://models.mixlayer.ai/v1");
+    let client = Client::with_config(config);
+
+    let response: Value = client.responses().create_byot(json!({
+        "model": "qwen/qwen3.5-4b-free",
+        "input": "Write a one-sentence bedtime story."
+    })).await?;
+
+    println!("{}", response["output_text"].as_str().unwrap_or(""));
+    Ok(())
+}
+```
+</Tabs.Tab>
+</Tabs>
+
+## Request parameters
+
+This page is the canonical reference for supported Responses parameters.
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `model` | string | Yes | Model identifier. |
+| `input` | string or array of input items | Yes | Text prompt or Responses input items. See [Input](#input). |
+| `instructions` | string | No | System/developer instructions prepended to the request. |
+| `stream` | boolean | No | If `true`, returns Responses Server-Sent Events. Defaults to `false`. |
+| `temperature` | float | No | Sampling temperature. |
+| `top_p` | float | No | Nucleus sampling value. |
+| `frequency_penalty` | float | No | Frequency penalty. |
+| `presence_penalty` | float | No | Presence penalty. |
+| `max_output_tokens` | integer | No | Maximum generated output tokens. |
+| `tools` | array | No | Function tools the model may call. Only `type: "function"` tools are supported. |
+| `tool_choice` | `"auto"` or `"none"` | No | Defaults to `"auto"`. `"none"` disables tool use for the request. |
+| `text` | object | No | Text output configuration. See [Text format](#text-format). |
+| `reasoning` | object | No | Reasoning configuration. See [Reasoning](#reasoning). |
+| `store` | boolean | No | If `true`, stores the response so a later request can use `previous_response_id`. Defaults to `false`. |
+| `previous_response_id` | string | No | Continues from a stored response. |
+| `metadata` | object | No | Metadata stored with the response when `store` is `true`. |
+| `safety_identifier` | string | No | End-user or session identifier echoed on the response object. |
+| `prompt_cache_key` | string | No | Prompt-cache key echoed on the response object. |
+| `parallel_tool_calls` | boolean | No | Supported only as `true`; when `tools` is present, Mixlayer defaults this to `true`. |
+| `truncation` | `"disabled"` | No | Compatibility field. Only `"disabled"` is supported. |
+| `service_tier` | `"default"` | No | Compatibility field. Only `"default"` is supported. |
+| `stream_options.include_usage` | boolean | No | Accepted for streaming requests. Usage is included in terminal response events. |
+
+## Input
+
+The simplest `input` is a string, which Mixlayer treats as a user message:
+
+```json
+{
+  "model": "qwen/qwen3.5-4b-free",
+  "input": "Explain why the sky is blue."
+}
+```
+
+Array input supports message items, function-call items, and function-call output items:
+
+```json
+{
+  "model": "qwen/qwen3.5-4b-free",
+  "input": [
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        { "type": "input_text", "text": "What is the weather in SF?" }
+      ]
+    }
+  ]
+}
+```
+
+Supported message roles:
+
+| Role | Behavior |
+| --- | --- |
+| `user` | User message. |
+| `assistant` | Previous assistant message. |
+| `system` | System message. |
+| `developer` | Treated as a system message. |
+
+Supported content part types:
+
+| Type | Description |
+| --- | --- |
+| `input_text` | Text input. |
+| `output_text` | Previous assistant output text. |
+| `text` | Text content. |
+| `reasoning_text` | Previous assistant reasoning text. Only valid on assistant messages. |
+
+## Function Calls
+
+Function tools use the Responses function-tool shape:
+
+```json
+{
+  "tools": [
+    {
+      "type": "function",
+      "name": "get_weather",
+      "description": "Get weather for a city.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "city": { "type": "string" }
+        },
+        "required": ["city"]
+      },
+      "strict": true
+    }
+  ]
+}
+```
+
+Tool names must be 1-64 characters and contain only ASCII letters, numbers, `_`, or `-`. `parameters` must be a valid JSON Schema object. If omitted, Mixlayer uses an empty object schema.
+
+To continue after a tool call, send the prior `function_call` item and a matching `function_call_output` item:
+
+```json
+{
+  "input": [
+    {
+      "type": "function_call",
+      "call_id": "call_1",
+      "name": "get_weather",
+      "arguments": "{\"city\":\"SF\"}"
+    },
+    {
+      "type": "function_call_output",
+      "call_id": "call_1",
+      "output": "{\"temp\":65}"
+    }
+  ]
+}
+```
+
+## Text Format
+
+Use `text.format` to request plain text, JSON object mode, or JSON Schema output.
+
+```json
+{
+  "text": {
+    "format": {
+      "type": "json_schema",
+      "name": "answer",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "answer": { "type": "string" }
+        },
+        "required": ["answer"]
+      },
+      "strict": true
+    }
+  }
+}
+```
+
+Supported `text.format.type` values:
+
+| Type | Description |
+| --- | --- |
+| `text` | Plain text output. |
+| `json_object` | JSON object mode. |
+| `json_schema` | JSON Schema-constrained output. Requires `name` and `schema`; `strict` is optional. |
+
+## Reasoning
+
+Pass `reasoning.effort` to control thinking mode on supported models.
+
+| Value | Behavior |
+| --- | --- |
+| `none` | Disables thinking. |
+| `minimal` | Disables thinking. |
+| `low` | Disables thinking. |
+| `medium` | Enables thinking. |
+| `high` | Enables thinking. |
+| `xhigh` | Enables thinking. |
+
+`reasoning.summary` and `reasoning.generate_summary` may be omitted or `null`.
+
+## Stored Responses
+
+Set `store: true` to persist a completed response. Stored responses are retained for 30 days by default, matching OpenAI. You can customize the retention period for your organization in the Mixlayer console, including enforcing zero storage.
+
+A later request can pass that response's `id` as `previous_response_id` to continue from the stored transcript:
+
+```json
+{
+  "model": "qwen/qwen3.5-4b-free",
+  "previous_response_id": "resp_...",
+  "input": "Continue from there."
+}
+```
+
+Mixlayer loads up to 128 stored ancestors for `previous_response_id`.
+
+## Streaming
+
+When `stream: true`, Mixlayer returns Server-Sent Events and finishes with `data: [DONE]`.
+
+<Tabs items={['curl', 'Python', 'TypeScript', 'Rust']}>
+<Tabs.Tab>
+```bash
+curl https://models.mixlayer.ai/v1/responses \
+  -H "Authorization: Bearer $MIXLAYER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "qwen/qwen3.5-4b-free",
+    "stream": true,
+    "input": "Count to five."
+  }'
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```python file=stream_response.py
+import os
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.environ["MIXLAYER_API_KEY"],
+    base_url="https://models.mixlayer.ai/v1",
+)
+
+stream = client.responses.create(
+    model="qwen/qwen3.5-4b-free",
+    input="Count to five.",
+    stream=True,
+)
+
+for event in stream:
+    if event.type == "response.output_text.delta":
+        print(event.delta, end="", flush=True)
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```typescript file=stream_response.ts
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env["MIXLAYER_API_KEY"]!,
+  baseURL: "https://models.mixlayer.ai/v1",
+});
+
+const stream = await openai.responses.create({
+  model: "qwen/qwen3.5-4b-free",
+  input: "Count to five.",
+  stream: true,
+});
+
+for await (const event of stream) {
+  if (event.type === "response.output_text.delta") {
+    process.stdout.write(event.delta);
+  }
+}
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```rust file=src/main.rs
+use async_openai::{config::OpenAIConfig, Client};
+use futures::StreamExt;
+use serde_json::{json, Value};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let config = OpenAIConfig::new()
+        .with_api_key(std::env::var("MIXLAYER_API_KEY")?)
+        .with_api_base("https://models.mixlayer.ai/v1");
+    let client = Client::with_config(config);
+
+    let mut stream = client.responses().create_stream_byot::<_, Value>(json!({
+        "model": "qwen/qwen3.5-4b-free",
+        "input": "Count to five.",
+        "stream": true
+    })).await?;
+
+    while let Some(event) = stream.next().await {
+        let event = event?;
+        if event["type"] == "response.output_text.delta" {
+            print!("{}", event["delta"].as_str().unwrap_or(""));
+        }
+    }
+
+    Ok(())
+}
+```
+</Tabs.Tab>
+</Tabs>
+
+Common event types include:
+
+| Event | Description |
+| --- | --- |
+| `response.created` | Response object was created. |
+| `response.in_progress` | Generation started. |
+| `response.output_item.added` | A message, reasoning item, or function call was added. |
+| `response.output_text.delta` | Incremental output text. |
+| `response.reasoning_text.delta` | Incremental reasoning text. |
+| `response.function_call_arguments.delta` | Incremental function-call arguments. |
+| `response.completed` | Final response object with usage. |
+| `error` | Streaming error event. |
+
+## WebSocket transport
+
+Mixlayer also exposes Responses over WebSocket for long-running, tool-heavy workflows. Use it when you have many turns on the same response chain and want to avoid reopening an HTTP request for every continuation.
+
+```text
+wss://models.mixlayer.ai/v1/responses
+```
+
+Send a `response.create` JSON message for each turn. The message body is the same as `POST /v1/responses`, with an added `type` field:
+
+```json
+{
+  "type": "response.create",
+  "model": "qwen/qwen3.5-4b-free",
+  "input": "Count to five."
+}
+```
+
+The server replies with Responses stream events as JSON messages, such as `response.created`, `response.output_text.delta`, `response.completed`, or `error`.
+
+```javascript file=responses-websocket.js
+import WebSocket from "ws";
+
+const ws = new WebSocket("wss://models.mixlayer.ai/v1/responses", {
+  headers: {
+    Authorization: `Bearer ${process.env.MIXLAYER_API_KEY}`,
+  },
+});
+
+ws.on("open", () => {
+  ws.send(JSON.stringify({
+    type: "response.create",
+    model: "qwen/qwen3.5-4b-free",
+    input: "Count to five.",
+  }));
+});
+
+ws.on("message", (data) => {
+  const event = JSON.parse(data.toString());
+  if (event.type === "response.output_text.delta") {
+    process.stdout.write(event.delta);
+  }
+});
+```
+
+Use `previous_response_id` on the next `response.create` event to continue from an earlier response. Within a WebSocket connection, completed responses are cached locally, so `previous_response_id` can refer to earlier turns on that socket even when `store` is omitted.
+
+Set `store: true` when a response must be durable outside the current WebSocket connection or reusable over HTTP. Set `store: false` when you want no stored continuation state. A `store: true` response cannot continue from a response that only exists in the current WebSocket scope.
+
+Notes:
+
+| Behavior | Details |
+| --- | --- |
+| Authentication | Pass the same Bearer token used for HTTP requests. |
+| Event shape | Server events use the same Responses streaming event shape as HTTP streaming. |
+| Request shape | Use `type: "response.create"` plus the normal create-response fields. |
+| Unsupported fields | Do not send `background` on WebSocket requests. |
+| Parallel work | Use multiple WebSocket connections for multiple in-flight responses. |
+
+## Response
+
+A non-streaming response returns a `response` object:
+
+```json
+{
+  "id": "resp_...",
+  "object": "response",
+  "created_at": 1762340000,
+  "completed_at": 1762340001,
+  "status": "completed",
+  "model": "qwen/qwen3.5-4b-free",
+  "output": [
+    {
+      "type": "message",
+      "id": "msg_...",
+      "status": "completed",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "A tiny moonbeam tucked the city into sleep.",
+          "annotations": []
+        }
+      ]
+    }
+  ],
+  "output_text": "A tiny moonbeam tucked the city into sleep.",
+  "usage": {
+    "input_tokens": 12,
+    "input_tokens_details": { "cached_tokens": 0 },
+    "output_tokens": 11,
+    "output_tokens_details": { "reasoning_tokens": 0 },
+    "total_tokens": 23
+  }
+}
+```
+
+## Errors
+
+Errors use the OpenAI error envelope:
+
+```json
+{
+  "error": {
+    "message": "Missing required parameter `input`",
+    "type": "invalid_request_error",
+    "code": "missing_required_parameter"
+  }
+}
+```
