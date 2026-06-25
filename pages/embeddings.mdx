@@ -1,0 +1,151 @@
+---
+title: Embeddings
+description: Beta reference for the Mixlayer OpenAI-compatible embeddings endpoint
+---
+
+import { Callout } from 'nextra/components'
+
+# Embeddings
+
+`POST https://models.mixlayer.ai/v1/embeddings`
+
+Create vector embeddings from text or token inputs using an embedding model. The endpoint follows the OpenAI-compatible embeddings response shape and is currently in beta.
+
+<Callout type="warning">
+  Embeddings support is in beta. Use an embedding model authorized for your API
+  key; chat/generation models are rejected on this endpoint.
+</Callout>
+
+## Authentication
+
+Every request requires a Bearer token in the `Authorization` header. Create one in the [Mixlayer console](https://console.mixlayer.com/app/api-keys).
+
+```bash
+Authorization: Bearer $MIXLAYER_API_KEY
+```
+
+## Minimal request
+
+```bash
+curl https://models.mixlayer.ai/v1/embeddings \
+  -H "Authorization: Bearer $MIXLAYER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "$MIXLAYER_EMBEDDING_MODEL",
+    "input": "The food was delicious and the service was fast."
+  }'
+```
+
+## Request parameters
+
+This page is the canonical reference for supported embeddings parameters.
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `model` | string | Yes | Embedding model identifier. The model must be available to your API key and marked as an embedding model. |
+| `input` | string, string array, token array, or array of token arrays | Yes | Input to embed. Text strings must be non-empty. Arrays must contain 1-2048 items. Token inputs must be non-empty and fit the model context window. |
+| `dimensions` | integer | No | Requested output vector size. Must be greater than `0` when provided. See [Embedding model-specific behavior](#embedding-model-specific-behavior) below. |
+| `encoding_format` | `"float"` or `"base64"` | No | Format for returned embedding vectors. Defaults to `"float"`. |
+| `input_type` | string | No | Optional model-specific embedding task hint. See [Embedding model-specific behavior](#embedding-model-specific-behavior) below. |
+| `normalize` | boolean | No | Requests normalized vectors when supported by the model server. |
+| `truncate` | boolean | No | Requests truncation behavior when supported by the model server. |
+
+## Embedding model-specific behavior
+
+### Qwen3 Embedding 8B
+
+Supported `dimensions` values: integers from `32` to `4096`.
+
+Supported `input_type` values:
+
+| Value | Use for |
+| --- | --- |
+| `query` | Search queries, questions, or other text used to retrieve matching documents. |
+| `document` | Documents, passages, or other corpus text being retrieved. |
+
+Omit `input_type` when you do not want a model-specific prompt applied.
+
+## Input formats
+
+Text input:
+
+```json
+{
+  "model": "$MIXLAYER_EMBEDDING_MODEL",
+  "input": "Embed this text"
+}
+```
+
+Batched text input:
+
+```json
+{
+  "model": "$MIXLAYER_EMBEDDING_MODEL",
+  "input": ["First document", "Second document"]
+}
+```
+
+Token input:
+
+```json
+{
+  "model": "$MIXLAYER_EMBEDDING_MODEL",
+  "input": [101, 7592, 102]
+}
+```
+
+Batched token input:
+
+```json
+{
+  "model": "$MIXLAYER_EMBEDDING_MODEL",
+  "input": [[101, 7592, 102], [101, 2088, 102]]
+}
+```
+
+## Response
+
+A successful response returns a list of embedding objects:
+
+```json
+{
+  "object": "list",
+  "data": [
+    {
+      "object": "embedding",
+      "embedding": [0.0023064255, -0.009327292, 0.015797347],
+      "index": 0
+    }
+  ],
+  "model": "$MIXLAYER_EMBEDDING_MODEL",
+  "usage": {
+    "prompt_tokens": 8,
+    "total_tokens": 8
+  }
+}
+```
+
+When `encoding_format` is `"base64"`, each `embedding` value is a base64 string instead of an array of floats.
+
+## Errors
+
+Errors use the OpenAI error envelope:
+
+```json
+{
+  "error": {
+    "message": "input strings must not be empty",
+    "type": "invalid_request_error",
+    "code": "invalid_input"
+  }
+}
+```
+
+Common validation errors include:
+
+| Code | Cause |
+| --- | --- |
+| `invalid_input` | Empty input, empty text, too many batch items, or token input longer than the model context window. |
+| `invalid_dimensions` | `dimensions` was `0`. |
+| `invalid_encoding_format` | `encoding_format` was not `"float"` or `"base64"`. |
+| `model_kind_mismatch` | The requested model is not an embedding model. |

@@ -17,6 +17,16 @@ const meta: Meta = {
   },
   "chat-completions": "Chat Completions",
   responses: "Responses",
+  embeddings: {
+    title: (
+      <span className="inline-flex items-center gap-1.5">
+        Embeddings
+        <span className="rounded bg-amber-400/10 px-1.5 py-0.5 text-[10px] font-medium uppercase text-amber-400">
+          Beta
+        </span>
+      </span>
+    ),
+  },
   "tool-calling": "Tool Calling",
   reasoning: "Reasoning",
 
