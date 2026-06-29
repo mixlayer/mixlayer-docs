@@ -23,6 +23,8 @@ Authorization: Bearer $MIXLAYER_API_KEY
 
 ## Minimal request
 
+<Tabs items={['curl', 'Python', 'TypeScript', 'Rust']}>
+<Tabs.Tab>
 ```bash
 curl https://models.mixlayer.ai/v1/chat/completions \
   -H "Authorization: Bearer $MIXLAYER_API_KEY" \
@@ -34,6 +36,69 @@ curl https://models.mixlayer.ai/v1/chat/completions \
     ]
   }'
 ```
+</Tabs.Tab>
+<Tabs.Tab>
+```python file=chat.py
+import os
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.environ["MIXLAYER_API_KEY"],
+    base_url="https://models.mixlayer.ai/v1",
+)
+
+response = client.chat.completions.create(
+    model="qwen/qwen3.5-4b-free",
+    messages=[{"role": "user", "content": "Hello!"}],
+)
+
+print(response.choices[0].message.content)
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```typescript file=chat.ts
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env["MIXLAYER_API_KEY"]!,
+  baseURL: "https://models.mixlayer.ai/v1",
+});
+
+const response = await openai.chat.completions.create({
+  model: "qwen/qwen3.5-4b-free",
+  messages: [{ role: "user", content: "Hello!" }],
+});
+
+console.log(response.choices[0].message.content);
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```rust file=src/main.rs
+use async_openai::{config::OpenAIConfig, types::CreateChatCompletionRequestArgs, Client};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let config = OpenAIConfig::new()
+        .with_api_key(std::env::var("MIXLAYER_API_KEY")?)
+        .with_api_base("https://models.mixlayer.ai/v1");
+    let client = Client::with_config(config);
+
+    let request = CreateChatCompletionRequestArgs::default()
+        .model("qwen/qwen3.5-4b-free")
+        .messages([async_openai::types::ChatCompletionRequestMessage::User(
+            "Hello!".into(),
+        )])
+        .build()?;
+
+    let response = client.chat().create(request).await?;
+    if let Some(content) = &response.choices[0].message.content {
+        println!("{content}");
+    }
+    Ok(())
+}
+```
+</Tabs.Tab>
+</Tabs>
 
 ## Messages
 
@@ -47,6 +112,39 @@ The `messages` field is a list of message objects in turn order. Each message ha
 | `tool` | The result of a tool call. Must include `tool_call_id` referencing the assistant's `tool_calls[].id`. See [Tool Calling](/tool-calling). |
 
 Assistant messages from previous turns may also include `reasoning_content` from a thinking-mode response — see [Reasoning](/reasoning).
+
+`content` may be a string, `null`, or an array of content parts. Supported content part types are:
+
+| Type | Description |
+| --- | --- |
+| `text` | Text input. |
+| `input_text` | Text input; accepted for OpenAI compatibility. |
+| `image_url` | Image or PDF media input. Only supported on `user` messages. |
+
+## Vision and media input
+
+Media input is supported on models documented as supporting vision. See [Vision](/vision) for supported media sources, limits, and restrictions.
+
+```json
+{
+  "model": "your-vision-model",
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        { "type": "text", "text": "What is in this image?" },
+        {
+          "type": "image_url",
+          "image_url": {
+            "url": "https://example.com/photo.png",
+            "detail": "auto"
+          }
+        }
+      ]
+    }
+  ]
+}
+```
 
 ## Sampling parameters
 
@@ -325,7 +423,9 @@ Errors follow OpenAI's error envelope:
 | HTTP status | `type` | Common causes |
 | --- | --- | --- |
 | 400 | `invalid_request_error` | Malformed JSON, parameter out of range (e.g. `presence_penalty` outside -2.0 to 2.0), invalid tool schema, invalid `response_format`. |
+| 400 | `invalid_request_error` / `invalid_media` | Unsupported media model, media outside a user message, media with tools or constrained decoding, unsupported MIME type, invalid `detail`, invalid/blocked media URL, failed fetch, too many media inputs, or media over size limits. |
 | 400 | `model_not_found` | The requested `model` SKU doesn't exist or isn't authorized for your API key. |
 | 401 | `authentication_error` | Missing or invalid API key. |
 | 403 | `permission_error` | API key doesn't have access to the requested model. |
+| 413 | — | JSON request body exceeds the gateway body limit. |
 | 500 | `server_error` | Internal generation failure. Safe to retry with backoff. |

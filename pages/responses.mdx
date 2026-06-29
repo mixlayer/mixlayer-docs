@@ -168,6 +168,58 @@ Supported content part types:
 | `output_text` | Previous assistant output text. |
 | `text` | Text content. |
 | `reasoning_text` | Previous assistant reasoning text. Only valid on assistant messages. |
+| `input_image` | Image media input. Only valid on user messages. |
+| `input_file` | File media input, including PDFs. Only valid on user messages. |
+
+## Vision and media input
+
+Media input is supported on models documented as supporting vision. See [Vision](/vision) for supported media sources, limits, and restrictions.
+
+Use `input_image` with `image_url` for images:
+
+```json
+{
+  "model": "your-vision-model",
+  "input": [
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        { "type": "input_text", "text": "What is in this image?" },
+        {
+          "type": "input_image",
+          "image_url": {
+            "url": "https://example.com/photo.webp",
+            "detail": "auto"
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+Use `input_file` with `file_url` or `file_data` for files such as PDFs:
+
+```json
+{
+  "model": "your-vision-model",
+  "input": [
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        { "type": "input_text", "text": "Summarize this document." },
+        {
+          "type": "input_file",
+          "file_url": "https://example.com/report.pdf",
+          "filename": "report.pdf"
+        }
+      ]
+    }
+  ]
+}
+```
 
 ## Function Calls
 
@@ -492,3 +544,12 @@ Errors use the OpenAI error envelope:
   }
 }
 ```
+
+Common validation errors include:
+
+| HTTP status | `type` / `code` | Common causes |
+| --- | --- | --- |
+| 400 | `invalid_request_error` / `invalid_media` | Unsupported media model, media outside a user message, media with tools or constrained decoding, unsupported MIME type, invalid `detail`, invalid/blocked media URL, failed fetch, too many media inputs, or media over size limits. |
+| 400 | `invalid_request_error` / `unsupported_input_type` | Unsupported content part type or media in a function-call output. |
+| 400 | `invalid_request_error` / `unsupported_parameter` | Unsupported Responses compatibility field, such as `background`, `max_tool_calls`, non-empty `include`, `top_logprobs`, `parallel_tool_calls: false`, or non-default `truncation` / `service_tier`. |
+| 413 | — | JSON request body exceeds the gateway body limit. |

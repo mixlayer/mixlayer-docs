@@ -1,7 +1,7 @@
 import React from "react";
 import { Badge } from "./badge";
 
-type Capability = "Tools" | "Reasoning";
+type Capability = "Tools" | "Reasoning" | "Vision";
 type Status = "Stable" | "Beta" | "Deprecated";
 
 type CatalogModel = {
@@ -18,7 +18,7 @@ const models: CatalogModel[] = [
     name: "Qwen 3.5 4B (Free)",
     sku: "qwen/qwen3.5-4b-free",
     contextWindow: "131K",
-    capabilities: ["Tools", "Reasoning"],
+    capabilities: ["Tools", "Reasoning", "Vision"],
     status: "Stable",
     useCase:
       "Free tier for prototyping, learning the API, and short low-stakes tasks. Smallest and lowest-latency model in the catalog; rate-limited so not for production traffic.",
@@ -27,7 +27,7 @@ const models: CatalogModel[] = [
     name: "Qwen 3.5 9B",
     sku: "qwen/qwen3.5-9b",
     contextWindow: "131K",
-    capabilities: ["Tools", "Reasoning"],
+    capabilities: ["Tools", "Reasoning", "Vision"],
     status: "Stable",
     useCase:
       "The cheapest paid model. Good default for high-volume, simple chat, classification, and short-form summarization where cost dominates.",
@@ -36,7 +36,7 @@ const models: CatalogModel[] = [
     name: "Qwen 3.5 27B",
     sku: "qwen/qwen3.5-27b",
     contextWindow: "131K",
-    capabilities: ["Tools", "Reasoning"],
+    capabilities: ["Tools", "Reasoning", "Vision"],
     status: "Stable",
     useCase:
       "Dense general-purpose model. Stronger than 9B on multi-step reasoning and instruction-following while staying single-stream fast.",
@@ -45,7 +45,7 @@ const models: CatalogModel[] = [
     name: "Qwen 3.5 35B (MoE, 3B active)",
     sku: "qwen/qwen3.5-35b-a3b",
     contextWindow: "131K",
-    capabilities: ["Tools", "Reasoning"],
+    capabilities: ["Tools", "Reasoning", "Vision"],
     status: "Stable",
     useCase:
       "Fast MoE — 35B of total knowledge but only 3B parameters active per token. Use when you want broader capability than 9B at similar latency.",
@@ -54,7 +54,7 @@ const models: CatalogModel[] = [
     name: "Qwen 3.5 122B (MoE, 10B active)",
     sku: "qwen/qwen3.5-122b-a10b",
     contextWindow: "131K",
-    capabilities: ["Tools", "Reasoning"],
+    capabilities: ["Tools", "Reasoning", "Vision"],
     status: "Stable",
     useCase:
       "High-capability MoE for complex reasoning, longer contexts, and harder coding tasks where 27B isn't enough but you don't need the frontier model.",
@@ -63,7 +63,7 @@ const models: CatalogModel[] = [
     name: "Qwen 3.5 397B (MoE, 17B active)",
     sku: "qwen/qwen3.5-397b-a17b",
     contextWindow: "131K",
-    capabilities: ["Tools", "Reasoning"],
+    capabilities: ["Tools", "Reasoning", "Vision"],
     status: "Stable",
     useCase:
       "Frontier model. Best choice for hard reasoning, multi-step coding, agentic loops, and anywhere quality matters more than per-token cost.",
@@ -76,9 +76,10 @@ const statusColor: Record<Status, "emerald" | "amber" | "zinc"> = {
   Deprecated: "zinc",
 };
 
-const capabilityColor: Record<Capability, "cyan" | "violet"> = {
+const capabilityColor: Record<Capability, "cyan" | "violet" | "emerald"> = {
   Tools: "cyan",
   Reasoning: "violet",
+  Vision: "emerald",
 };
 
 export function ModelCapabilities() {

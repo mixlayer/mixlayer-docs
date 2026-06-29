@@ -27,6 +27,7 @@ const meta: Meta = {
       </span>
     ),
   },
+  vision: "Vision",
   "tool-calling": "Tool Calling",
   reasoning: "Reasoning",
 
