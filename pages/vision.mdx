@@ -1,0 +1,90 @@
+---
+title: Vision
+description: Send images and PDFs to vision-capable Mixlayer models
+---
+
+import { Tabs } from 'nextra/components'
+
+# Vision
+
+Vision lets supported models answer questions about images and PDFs. Use it for image understanding, screenshots, diagrams, scanned pages, and document summaries.
+
+Mixlayer supports vision input through both [Chat Completions](/chat-completions) and [Responses](/responses). Use a model documented as supporting vision; text-only models return `invalid_media` when media is included.
+
+## Request Shapes
+
+<Tabs items={['Chat Completions', 'Responses']}>
+<Tabs.Tab>
+```json
+{
+  "model": "your-vision-model",
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        { "type": "text", "text": "What is in this image?" },
+        {
+          "type": "image_url",
+          "image_url": {
+            "url": "https://example.com/photo.png",
+            "detail": "auto"
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```json
+{
+  "model": "your-vision-model",
+  "input": [
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        { "type": "input_text", "text": "Summarize this document." },
+        {
+          "type": "input_file",
+          "file_url": "https://example.com/report.pdf",
+          "filename": "report.pdf"
+        }
+      ]
+    }
+  ]
+}
+```
+</Tabs.Tab>
+</Tabs>
+
+## Supported Media
+
+| Source | Supported values |
+| --- | --- |
+| Remote URL | `https://` only. Redirects are followed up to 3 hops. |
+| Data URL | Base64 `data:` URL. Chat Completions uses it in `image_url`; Responses uses it in `image_url`, `file_data`, or `file_url`. |
+| MIME types | `image/jpeg`, `image/png`, `image/webp`, `application/pdf`. |
+| `detail` | Optional: `low`, `high`, `auto`, or `original`. |
+
+## Limits
+
+These are the current deployment defaults.
+
+| Limit | Default |
+| --- | --- |
+| Media parts per request | 8 |
+| Bytes per media item | 20 MiB |
+| Total media bytes per request | 80 MiB |
+| HTTPS fetch timeout | 10 seconds |
+| JSON request body | 160 MiB by default, configurable by deployment |
+| PDF pages processed | First 20 pages, rasterized at 150 DPI |
+
+## Restrictions
+
+Media is only supported on user messages.
+
+Media is not supported with tool calling or JSON Schema constrained decoding.
+
+Chat Completions returns `invalid_media` for media on `system`, `assistant`, or `tool` messages. Responses returns `unsupported_input_type` for non-user media parts and media in function-call outputs.
